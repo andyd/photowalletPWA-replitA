@@ -1,0 +1,166 @@
+# Photo Wallet PWA - Replit Agent Prompt
+
+Build a Progressive Web App called "Photo Wallet" - a minimalist photo viewer that recreates the experience of carrying your favorite photos in your wallet.
+
+## Core Concept
+Create a simple, privacy-focused app where users can store up to 10 cherished photos locally on their device and view them in a beautiful, full-screen experience with intuitive swipe gestures. Think of it as a digital version of the 3-4 photos people traditionally kept in their wallet.
+
+## Tech Stack
+- **Framework**: React 18+ with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **State Management**: Zustand
+- **Local Storage**: Dexie.js (IndexedDB wrapper)
+- **PWA**: Vite PWA Plugin
+- **Gestures**: @use-gesture/react
+
+## Key Features to Implement
+
+### 1. Photo Import & Management
+- File upload button that accepts JPEG, PNG, WebP images
+- Store up to 10 photos maximum in IndexedDB
+- Display photos in a grid view on home screen
+- Drag-and-drop reordering of photos
+- Delete photos with swipe-to-remove or tap-to-delete
+- Show photo count (e.g., "5/10 photos")
+
+### 2. Full-Screen Photo Viewer
+- Tap any photo to open full-screen viewer
+- **Swipe left/right** to navigate between photos
+- **Pinch-to-zoom** with smooth scaling (1x to 3x)
+- **Double-tap** to toggle between fit-to-screen and zoomed
+- **Pan/drag** when zoomed to explore the photo
+- Dark background to make photos pop
+- Minimal UI that auto-hides after 3 seconds
+- Close button or swipe down to exit viewer
+- Show photo index (e.g., "3 of 5")
+
+### 3. PWA Capabilities
+- Install prompt for adding to home screen
+- Offline-first: works completely without internet
+- App manifest with name "Photo Wallet" and custom icon
+- Service worker for caching app shell and photos
+- Splash screen on launch
+- Hide browser chrome for native app feel
+
+### 4. Home Screen Design
+**Header:**
+```
+Photo Wallet
+Your important photos at your fingertips, 
+like how your dad had them in his wallet back in the day.
+```
+
+**Main Area:**
+- If no photos: Large "Add Photos" button with helpful text
+- If photos exist: Grid of photo thumbnails (2 columns on mobile)
+- Each photo card shows thumbnail with subtle shadow
+- Floating "+" button in bottom-right corner for adding more photos
+
+## User Experience Requirements
+
+### Mobile-First Design
+- Touch-optimized with 44px minimum touch targets
+- Smooth 60fps animations
+- Portrait orientation optimized
+- Respect safe areas (notches, home indicators)
+- Responsive text sizing
+
+### Gesture Controls
+- Single tap: Select/open photo
+- Long press: Enter reorder mode
+- Swipe left/right: Navigate photos in viewer
+- Pinch: Zoom in/out
+- Double tap: Quick zoom toggle
+- Swipe down: Close viewer
+
+### Visual Design
+- **Color Scheme**: Dark theme with deep grays/blacks
+- **Typography**: Clean sans-serif, good readability
+- **Spacing**: Generous padding and margins
+- **Animations**: Smooth, physics-based transitions
+- **Loading States**: Skeleton screens and spinners
+
+## Privacy & Data
+- **100% local storage** - photos never leave the device
+- No analytics, no tracking, no external API calls
+- No user accounts or authentication needed
+- Store photos as blobs in IndexedDB
+- Handle browser storage quota limits gracefully
+
+## File Structure
+```
+src/
+├── components/
+│   ├── PhotoViewer.tsx       # Full-screen viewer with gestures
+│   ├── PhotoGrid.tsx          # Home screen photo grid
+│   ├── PhotoUploader.tsx      # File upload component
+│   └── Header.tsx             # App header
+├── hooks/
+│   ├── usePhotoStore.ts       # Zustand store for photo state
+│   └── useGestures.ts         # Gesture handling logic
+├── services/
+│   └── photoStorage.ts        # IndexedDB operations
+├── types/
+│   └── photo.ts               # TypeScript interfaces
+└── App.tsx                    # Main app component
+```
+
+## Critical Implementation Details
+
+### Photo Storage (IndexedDB)
+```typescript
+interface Photo {
+  id: string;
+  blob: Blob;
+  filename: string;
+  order: number;
+  createdAt: Date;
+}
+```
+
+### Gesture Configuration
+- Use `@use-gesture/react` for swipe, pinch, and drag
+- Smooth spring animations with Framer Motion
+- Prevent default browser gestures during interaction
+- Debounce rapid gestures
+
+### Performance Optimization
+- Lazy load photos not in viewport
+- Compress/resize large images before storing
+- Limit bundle size to < 500KB gzipped
+- Use intersection observer for grid
+- Preload adjacent photos in viewer
+
+## Success Criteria
+- ✅ Works offline completely
+- ✅ Smooth gestures (no lag or jank)
+- ✅ Photos persist between sessions
+- ✅ Can be installed as PWA to home screen
+- ✅ Lighthouse PWA score > 90
+- ✅ Works on iOS Safari and Chrome Android
+- ✅ All features work without internet connection
+
+## Nice-to-Have Features (If Time Permits)
+- Share photos using Web Share API
+- Keyboard navigation (arrows) for desktop
+- Photo captions/labels
+- Export all photos as zip
+- Dark/light theme toggle
+
+## Testing Checklist
+- [ ] Import 10 photos successfully
+- [ ] Swipe navigation works smoothly
+- [ ] Pinch zoom functions correctly
+- [ ] Photos persist after closing browser
+- [ ] App works in airplane mode
+- [ ] PWA installs to home screen
+- [ ] Delete photos removes from storage
+- [ ] Reorder photos updates correctly
+- [ ] App loads in < 2 seconds
+
+---
+
+**Start by creating the basic React app structure with photo upload and IndexedDB storage. Then add the full-screen viewer with swipe gestures. Finally, implement PWA features and polish the UI. Focus on making it feel smooth and native-like!**
