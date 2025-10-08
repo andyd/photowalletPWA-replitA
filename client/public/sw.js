@@ -1,4 +1,6 @@
-const CACHE_NAME = 'photo-wallet-v1';
+const CACHE_NAME = 'photo-wallet-v2';
+const isDevelopment = location.hostname === 'localhost' || location.hostname.includes('replit');
+
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -8,11 +10,13 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
+  if (!isDevelopment) {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.addAll(ASSETS_TO_CACHE);
+      })
+    );
+  }
   self.skipWaiting();
 });
 
@@ -36,6 +40,17 @@ self.addEventListener('fetch', (event) => {
   // Skip chrome-extension and other non-http(s) requests
   if (!event.request.url.startsWith('http')) return;
 
+  // In development, always use network first
+  if (isDevelopment) {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(event.request);
+      })
+    );
+    return;
+  }
+
+  // Production: cache first strategy
   event.respondWith(
     caches.match(event.request).then((response) => {
       if (response) {
