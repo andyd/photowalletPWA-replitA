@@ -9,6 +9,8 @@ export function usePWA() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
   useEffect(() => {
     // Check if already installed
@@ -32,6 +34,41 @@ export function usePWA() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Service worker update detection
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then((registration) => {
+        // Check for updates every 60 seconds
+        setInterval(() => {
+          registration.update();
+        }, 60000);
+
+        // Detect when a new service worker is waiting
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New service worker is waiting
+                setUpdateAvailable(true);
+                setWaitingWorker(newWorker);
+              }
+            });
+          }
+        });
+
+        // If there's already a waiting worker
+        if (registration.waiting) {
+          setUpdateAvailable(true);
+          setWaitingWorker(registration.waiting);
+        }
+      });
+
+      // Reload when new service worker takes control
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -59,9 +96,18 @@ export function usePWA() {
     }
   };
 
+  const applyUpdate = () => {
+    if (waitingWorker) {
+      // Tell the waiting service worker to skip waiting and activate
+      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+    }
+  };
+
   return {
     isInstallable,
     isInstalled,
-    installApp
+    installApp,
+    updateAvailable,
+    applyUpdate
   };
 }

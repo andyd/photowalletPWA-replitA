@@ -1,4 +1,4 @@
-const CACHE_NAME = 'photo-wallet-v2';
+const CACHE_NAME = 'photo-wallet-v3';
 const isDevelopment = location.hostname === 'localhost' || location.hostname.includes('replit');
 
 const ASSETS_TO_CACHE = [
@@ -31,6 +31,13 @@ self.addEventListener('activate', (event) => {
     })
   );
   self.clients.claim();
+});
+
+// Listen for messages from the client to skip waiting
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {

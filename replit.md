@@ -11,6 +11,9 @@ Photo Wallet is a privacy-focused Progressive Web App (PWA) that recreates the e
 - **Updated photo counter**: Changed from "X/10" format to just "X photos" to reflect unlimited storage
 - **PWA install improvements**: Enhanced the install flow to properly handle user dismissal with clear feedback
 - **GitHub integration**: Added ability to push code to GitHub repository (manual setup required via shell commands)
+- **Chrome Android update fix**: Implemented no-cache headers for service worker and manifest files to prevent Chrome Android from caching and blocking updates
+- **Automatic update detection**: App now checks for updates every 60 seconds and displays an update notification when a new version is available
+- **Safari/iOS compatibility**: Fixed hard reset functionality to work on Safari/iOS by using fallback methods for unsupported APIs
 
 ## User Preferences
 

@@ -39,6 +39,24 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Critical for Chrome Android: Set no-cache headers on service worker and manifest
+  // This prevents Chrome from caching these files and not detecting updates
+  app.get('/sw.js', (_req, res, next) => {
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    next();
+  });
+
+  app.get('/manifest.json', (_req, res, next) => {
+    res.set({
+      'Cache-Control': 'max-age=0, no-cache'
+    });
+    next();
+  });
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";

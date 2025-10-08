@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePhotoStore } from '@/hooks/usePhotoStore';
+import { usePWA } from '@/hooks/usePWA';
 import { Header } from '@/components/Header';
 import { PhotoCounter } from '@/components/PhotoCounter';
 import { EmptyState } from '@/components/EmptyState';
@@ -7,6 +8,7 @@ import { PhotoGrid } from '@/components/PhotoGrid';
 import { PhotoViewer } from '@/components/PhotoViewer';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { InstallBanner } from '@/components/InstallBanner';
+import { UpdateNotification } from '@/components/UpdateNotification';
 import { photoStorage } from '@/services/photoStorage';
 import { useToast } from '@/hooks/use-toast';
 import { isDuplicatePhoto } from '@/utils/photoUtils';
@@ -35,6 +37,7 @@ export default function Home() {
     setCurrentPhotoIndex,
   } = usePhotoStore();
 
+  const { updateAvailable, applyUpdate } = usePWA();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [duplicateFile, setDuplicateFile] = useState<File | null>(null);
@@ -205,6 +208,8 @@ export default function Home() {
       </AlertDialog>
 
       <InstallBanner photoCount={photos.length} />
+      
+      {updateAvailable && <UpdateNotification onUpdate={applyUpdate} />}
     </div>
   );
 }
