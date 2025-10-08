@@ -42,13 +42,21 @@ export function usePWA() {
   const installApp = async () => {
     if (!deferredPrompt) return false;
 
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    setDeferredPrompt(null);
-    setIsInstallable(false);
-    
-    return outcome === 'accepted';
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      // Clear the prompt as it can only be used once
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+      
+      return outcome === 'accepted';
+    } catch (error) {
+      // Handle errors (e.g., prompt already used)
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+      return false;
+    }
   };
 
   return {

@@ -59,6 +59,12 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
         description: 'Photo Wallet is being added to your home screen',
       });
       setIsOpen(false);
+    } else {
+      toast({
+        title: 'Installation canceled',
+        description: 'Reload the page to try again',
+      });
+      setIsOpen(false);
     }
   };
 
