@@ -25,6 +25,7 @@ import { InstallInstructionsDialog } from './InstallInstructionsDialog';
 import { useTheme } from '@/components/ThemeProvider';
 import { usePWA } from '@/hooks/usePWA';
 import { useToast } from '@/hooks/use-toast';
+import { hardResetApp } from '@/utils/hardReset';
 import type { Photo } from '@shared/schema';
 
 interface SettingsDialogProps {
@@ -42,10 +43,20 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
   const { isInstallable, isInstalled, installApp } = usePWA();
   const { toast } = useToast();
 
-  const handleReset = () => {
-    onResetApp();
+  const handleReset = async () => {
     setShowResetConfirm(false);
     setIsOpen(false);
+    
+    toast({
+      title: 'Resetting app...',
+      description: 'Clearing all data and refreshing',
+    });
+    
+    // Wait a moment for toast to show
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Perform hard reset (clears service worker, caches, IndexedDB, and reloads)
+    await hardResetApp();
   };
 
   const handleManagePhotos = () => {
@@ -182,7 +193,7 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
                 data-testid="button-reset-app"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Reset App & Delete All Photos
+                Hard Reset & Clear All Data
               </Button>
             </div>
           </div>
@@ -199,9 +210,14 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
         <AlertDialogContent data-testid="dialog-reset-confirm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Hard Reset App?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete all your photos from your device. This action cannot be undone.
+              This will:
+              <br />• Delete all your photos
+              <br />• Clear service worker and caches
+              <br />• Reload with fresh version from server
+              <br /><br />
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -211,7 +227,7 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               data-testid="button-confirm-reset"
             >
-              Delete All Photos
+              Hard Reset
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
