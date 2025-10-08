@@ -117,27 +117,30 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
               </div>
             </div>
 
-            {(isInstallable || isInstalled) && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">App</h3>
-                {isInstallable && (
-                  <Button
-                    variant="secondary"
-                    className="w-full justify-start"
-                    onClick={handleInstall}
-                    data-testid="button-install-settings"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Install App
-                  </Button>
-                )}
-                {isInstalled && (
-                  <div className="text-sm text-muted-foreground px-3 py-2" data-testid="text-app-installed">
-                    App is installed on your device
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">App</h3>
+              {isInstalled ? (
+                <div className="text-sm text-muted-foreground px-3 py-2" data-testid="text-app-installed">
+                  App is installed on your device
+                </div>
+              ) : isInstallable ? (
+                <Button
+                  variant="secondary"
+                  className="w-full justify-start"
+                  onClick={handleInstall}
+                  data-testid="button-install-app"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Install App
+                </Button>
+              ) : (
+                <div className="text-sm text-muted-foreground px-3 py-2 space-y-2" data-testid="text-install-instructions">
+                  <p className="font-medium">Install Photo Wallet:</p>
+                  <p>• <strong>Chrome/Edge:</strong> Open in browser tab, then look for install icon in address bar</p>
+                  <p>• <strong>Safari/iOS:</strong> Tap Share → "Add to Home Screen"</p>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Photos</h3>
