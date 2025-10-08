@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ManagePhotosDialog } from './ManagePhotosDialog';
+import { InstallInstructionsDialog } from './InstallInstructionsDialog';
 import { useTheme } from '@/components/ThemeProvider';
 import { usePWA } from '@/hooks/usePWA';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +37,7 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
   const [isOpen, setIsOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showManagePhotos, setShowManagePhotos] = useState(false);
+  const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const { theme, setTheme } = useTheme();
   const { isInstallable, isInstalled, installApp } = usePWA();
   const { toast } = useToast();
@@ -52,18 +54,25 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
   };
 
   const handleInstall = async () => {
-    const accepted = await installApp();
-    if (accepted) {
-      toast({
-        title: 'Installing...',
-        description: 'Photo Wallet is being added to your home screen',
-      });
-      setIsOpen(false);
+    if (isInstallable) {
+      // Native install is available
+      const accepted = await installApp();
+      if (accepted) {
+        toast({
+          title: 'Installing...',
+          description: 'Photo Wallet is being added to your home screen',
+        });
+        setIsOpen(false);
+      } else {
+        toast({
+          title: 'Installation canceled',
+          description: 'Reload the page to try again',
+        });
+        setIsOpen(false);
+      }
     } else {
-      toast({
-        title: 'Installation canceled',
-        description: 'Reload the page to try again',
-      });
+      // Show instructions for manual install
+      setShowInstallInstructions(true);
       setIsOpen(false);
     }
   };
@@ -123,7 +132,7 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
                 <div className="text-sm text-muted-foreground px-3 py-2" data-testid="text-app-installed">
                   App is installed on your device
                 </div>
-              ) : isInstallable ? (
+              ) : (
                 <Button
                   variant="secondary"
                   className="w-full justify-start"
@@ -133,12 +142,6 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
                   <Download className="w-4 h-4 mr-2" />
                   Install App
                 </Button>
-              ) : (
-                <div className="text-sm text-muted-foreground px-3 py-2 space-y-2" data-testid="text-install-instructions">
-                  <p className="font-medium">Install Photo Wallet:</p>
-                  <p>• <strong>Chrome/Edge:</strong> Open in browser tab, then look for install icon in address bar</p>
-                  <p>• <strong>Safari/iOS:</strong> Tap Share → "Add to Home Screen"</p>
-                </div>
               )}
             </div>
 
@@ -213,6 +216,11 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <InstallInstructionsDialog
+        open={showInstallInstructions}
+        onOpenChange={setShowInstallInstructions}
+      />
     </>
   );
 }
