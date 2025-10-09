@@ -1,5 +1,6 @@
 import { PhotoUploader } from '../PhotoUploader';
 import { Toaster } from '@/components/ui/toaster';
+import { MAX_PHOTOS } from '@/utils/constants';
 
 export default function PhotoUploaderExample() {
   return (
@@ -10,7 +11,7 @@ export default function PhotoUploaderExample() {
             console.log('Photo selected:', file.name);
           }}
           photoCount={5}
-          maxPhotos={10}
+          maxPhotos={MAX_PHOTOS}
         />
       </div>
       <Toaster />

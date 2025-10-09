@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { useGesture } from '@use-gesture/react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useWebShare } from '@/hooks/useWebShare';
+import { useToast } from '@/hooks/use-toast';
+import { GestureTutorial } from '@/components/GestureTutorial';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,15 +42,18 @@ export function PhotoViewer({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
+  const [showTutorial, setShowTutorial] = useState(false);
   
   const dragOffsetX = useMotionValue(0);
   const dragOffsetY = useMotionValue(0);
   const closingProgress = useMotionValue(0);
-  
+
   const hideUITimeoutRef = useRef<NodeJS.Timeout>();
-  const lastTapRef = useRef<number>(0);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const currentPhoto = photos[currentIndex];
+
+  const { canShare, sharePhoto } = useWebShare();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!currentPhoto) return;
@@ -78,6 +84,12 @@ export function PhotoViewer({
   useEffect(() => {
     if (!isOpen) return;
 
+    // Check if user has seen gesture tutorial
+    const hasSeenTutorial = localStorage.getItem('photo-wallet-tutorial-seen');
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+    }
+
     const resetUITimeout = () => {
       if (hideUITimeoutRef.current) {
         clearTimeout(hideUITimeoutRef.current);
@@ -95,6 +107,11 @@ export function PhotoViewer({
       }
     };
   }, [isOpen, currentIndex]);
+
+  const handleTutorialClose = () => {
+    localStorage.setItem('photo-wallet-tutorial-seen', 'true');
+    setShowTutorial(false);
+  };
 
   const handleMouseMove = () => {
     if (hideUITimeoutRef.current) {
@@ -142,7 +159,7 @@ export function PhotoViewer({
     if (currentPhoto) {
       onDeletePhoto(currentPhoto.id);
       setShowDeleteDialog(false);
-      
+
       // Navigate to next photo or close if this was the last one
       if (photos.length > 1) {
         if (currentIndex >= photos.length - 1) {
@@ -151,6 +168,22 @@ export function PhotoViewer({
       } else {
         onClose();
       }
+    }
+  };
+
+  const handleShare = async () => {
+    if (!currentPhoto) return;
+
+    const success = await sharePhoto(currentPhoto, {
+      title: 'Photo from Photo Wallet',
+      text: currentPhoto.filename,
+    });
+
+    if (success) {
+      toast({
+        title: 'Photo shared',
+        description: 'Successfully shared photo',
+      });
     }
   };
 
@@ -204,25 +237,25 @@ export function PhotoViewer({
           setPosition({ x: 0, y: 0 });
         }
       },
+      onDoubleClick: ({ event }) => {
+        event.preventDefault();
+        // Double tap to toggle zoom
+        if (scale > 1) {
+          setScale(1);
+          setPosition({ x: 0, y: 0 });
+        } else {
+          setScale(2);
+        }
+      },
+      onLongPress: ({ event }) => {
+        event.preventDefault();
+        // Long press to show delete dialog
+        setShowDeleteDialog(true);
+      },
       onClick: ({ event }) => {
         event.preventDefault();
-        
-        const now = Date.now();
-        const timeSinceLastTap = now - lastTapRef.current;
-        
-        // Double tap detection (within 300ms)
-        if (timeSinceLastTap < 300) {
-          setShowDeleteDialog(true);
-          lastTapRef.current = 0;
-        } else {
-          // Single tap - advance to next photo
-          lastTapRef.current = now;
-          setTimeout(() => {
-            if (lastTapRef.current === now) {
-              goToNext();
-            }
-          }, 300);
-        }
+        // Single tap - advance to next photo
+        goToNext();
       },
     },
     {
@@ -233,6 +266,10 @@ export function PhotoViewer({
       pinch: {
         scaleBounds: { min: 1, max: 3 },
         rubberband: true,
+      },
+      longPress: {
+        threshold: 500, // 500ms hold to trigger
+        filterTaps: true,
       },
     }
   );
@@ -293,18 +330,39 @@ export function PhotoViewer({
             onClick={handleClose}
             className="text-white hover:bg-white/20"
             data-testid="button-close-viewer"
+            aria-label="Close photo viewer"
           >
-            <X className="w-6 h-6" />
+            <X className="w-6 h-6" aria-hidden="true" />
           </Button>
-          <div className="text-white text-sm" data-testid="text-photo-index">
+          <div
+            className="text-white text-sm"
+            data-testid="text-photo-index"
+            role="status"
+            aria-live="polite"
+            aria-label={`Viewing photo ${currentIndex + 1} of ${photos.length}`}
+          >
             {currentIndex + 1} of {photos.length}
           </div>
+          {canShare && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleShare}
+              className="text-white hover:bg-white/20"
+              data-testid="button-share-photo"
+              aria-label="Share this photo"
+            >
+              <Share2 className="w-6 h-6" aria-hidden="true" />
+            </Button>
+          )}
         </motion.div>
 
         <div
           ref={imageContainerRef}
           {...bind()}
           className="relative w-full h-full flex items-center justify-center touch-none overflow-hidden"
+          role="img"
+          aria-label={`Photo: ${currentPhoto.filename}`}
           style={{
             cursor: scale > 1 ? 'grab' : 'default',
           }}
@@ -366,8 +424,9 @@ export function PhotoViewer({
               onClick={goToPrevious}
               className="text-white hover:bg-white/20 pointer-events-auto"
               data-testid="button-previous-photo"
+              aria-label="Previous photo"
             >
-              <ChevronLeft className="w-8 h-8" />
+              <ChevronLeft className="w-8 h-8" aria-hidden="true" />
             </Button>
             <Button
               size="icon"
@@ -375,8 +434,9 @@ export function PhotoViewer({
               onClick={goToNext}
               className="text-white hover:bg-white/20 pointer-events-auto"
               data-testid="button-next-photo"
+              aria-label="Next photo"
             >
-              <ChevronRight className="w-8 h-8" />
+              <ChevronRight className="w-8 h-8" aria-hidden="true" />
             </Button>
           </motion.div>
         )}
@@ -415,6 +475,9 @@ export function PhotoViewer({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Gesture Tutorial for first-time users */}
+        {showTutorial && <GestureTutorial onClose={handleTutorialClose} />}
       </motion.div>
     </AnimatePresence>
   );

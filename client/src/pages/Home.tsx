@@ -7,9 +7,11 @@ import { PhotoGrid } from '@/components/PhotoGrid';
 import { PhotoViewer } from '@/components/PhotoViewer';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { InstallBanner } from '@/components/InstallBanner';
+import { WelcomeScreen } from '@/components/WelcomeScreen';
 import { photoStorage } from '@/services/photoStorage';
 import { useToast } from '@/hooks/use-toast';
 import { isDuplicatePhoto } from '@/utils/photoUtils';
+import { MAX_PHOTOS } from '@/utils/constants';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,11 +41,23 @@ export default function Home() {
   const { toast } = useToast();
   const [duplicateFile, setDuplicateFile] = useState<File | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const pendingFilesRef = useRef<File[]>([]);
 
   useEffect(() => {
     loadPhotos();
+
+    // Check if user has seen welcome screen
+    const hasSeenWelcome = localStorage.getItem('photo-wallet-welcome-seen');
+    if (!hasSeenWelcome) {
+      setShowWelcome(true);
+    }
   }, [loadPhotos]);
+
+  const handleWelcomeComplete = () => {
+    localStorage.setItem('photo-wallet-welcome-seen', 'true');
+    setShowWelcome(false);
+  };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -57,7 +71,30 @@ export default function Home() {
 
   const handleAddPhotos = async (files: FileList) => {
     const fileArray = Array.from(files);
-    pendingFilesRef.current = fileArray;
+    const remainingSlots = MAX_PHOTOS - photos.length;
+
+    // Don't allow adding any photos if at limit
+    if (remainingSlots <= 0) {
+      toast({
+        title: 'Photo limit reached',
+        description: `Maximum of ${MAX_PHOTOS} photos allowed. Delete some photos to add more.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (fileArray.length > remainingSlots) {
+      toast({
+        title: 'Too many photos',
+        description: `You can only add ${remainingSlots} more photo${remainingSlots === 1 ? '' : 's'}. Limit is ${MAX_PHOTOS} photos.`,
+        variant: 'destructive',
+      });
+      // Only process files up to the limit
+      pendingFilesRef.current = fileArray.slice(0, remainingSlots);
+    } else {
+      pendingFilesRef.current = fileArray;
+    }
+
     await processNextFile();
   };
 
@@ -100,6 +137,16 @@ export default function Home() {
   };
 
   const addPhotoToStore = async (file: File) => {
+    // Double-check limit before adding (in case photos array changed)
+    if (photos.length >= MAX_PHOTOS) {
+      toast({
+        title: 'Photo limit reached',
+        description: `Maximum of ${MAX_PHOTOS} photos allowed.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       await addPhoto(file);
       toast({
@@ -133,7 +180,19 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <>
+      {/* Welcome screen for first-time users */}
+      {showWelcome && <WelcomeScreen onGetStarted={handleWelcomeComplete} />}
+
+      <div className="min-h-screen relative">
+        {/* Skip to main content link for screen readers */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md"
+        >
+          Skip to main content
+        </a>
+
       {photos.length === 0 ? (
         <>
           <Header />
@@ -147,19 +206,21 @@ export default function Home() {
             </h1>
             <div className="flex items-center gap-2">
               <PhotoCounter count={photos.length} />
-              <SettingsDialog 
+              <SettingsDialog
                 photos={photos}
                 onResetApp={handleResetApp}
                 onDeletePhoto={deletePhoto}
               />
             </div>
           </div>
-          <PhotoGrid
-            photos={photos}
-            onPhotoClick={openViewer}
-            onDelete={deletePhoto}
-            onAddPhotos={handleAddPhotos}
-          />
+          <main id="main-content">
+            <PhotoGrid
+              photos={photos}
+              onPhotoClick={openViewer}
+              onDelete={deletePhoto}
+              onAddPhotos={handleAddPhotos}
+            />
+          </main>
         </>
       )}
 
@@ -204,7 +265,8 @@ export default function Home() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <InstallBanner photoCount={photos.length} />
-    </div>
+        <InstallBanner photoCount={photos.length} />
+      </div>
+    </>
   );
 }

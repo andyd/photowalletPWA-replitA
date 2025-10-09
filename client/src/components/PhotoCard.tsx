@@ -16,10 +16,12 @@ export function PhotoCard({ photo, index, onPhotoClick, onDelete }: PhotoCardPro
   const [showDelete, setShowDelete] = useState(false);
 
   useEffect(() => {
-    const url = URL.createObjectURL(photo.blob);
+    // Use thumbnail for grid display, fallback to full image if thumbnail doesn't exist
+    const blob = photo.thumbnail || photo.blob;
+    const url = URL.createObjectURL(blob);
     setImageUrl(url);
     return () => URL.revokeObjectURL(url);
-  }, [photo.blob]);
+  }, [photo.thumbnail, photo.blob]);
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -33,14 +35,24 @@ export function PhotoCard({ photo, index, onPhotoClick, onDelete }: PhotoCardPro
       onMouseEnter={() => setShowDelete(true)}
       onMouseLeave={() => setShowDelete(false)}
       data-testid={`card-photo-${photo.id}`}
+      role="button"
+      tabIndex={0}
+      aria-label={`View photo: ${photo.filename}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onPhotoClick(index);
+        }
+      }}
     >
       <img
         src={imageUrl}
         alt={photo.filename}
         className="w-full h-full object-cover"
         data-testid={`img-photo-${photo.id}`}
+        loading="lazy"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
       <Button
         size="icon"
         variant="destructive"
@@ -49,8 +61,9 @@ export function PhotoCard({ photo, index, onPhotoClick, onDelete }: PhotoCardPro
         }`}
         onClick={handleDelete}
         data-testid={`button-delete-${photo.id}`}
+        aria-label={`Delete photo: ${photo.filename}`}
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-4 h-4" aria-hidden="true" />
       </Button>
     </Card>
   );

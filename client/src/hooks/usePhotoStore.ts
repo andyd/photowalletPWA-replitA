@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { Photo } from '@shared/schema';
 import { photoStorage } from '@/services/photoStorage';
+import { generateThumbnail } from '@/utils/thumbnailGenerator';
+import { MAX_PHOTOS } from '@/utils/constants';
 
 interface PhotoStore {
   photos: Photo[];
@@ -36,12 +38,25 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
   addPhoto: async (file: File) => {
     const { photos } = get();
+
+    // Enforce maximum photo limit
+    if (photos.length >= MAX_PHOTOS) {
+      const error = new Error(`Maximum of ${MAX_PHOTOS} photos allowed`);
+      throw error;
+    }
+
     set({ isLoading: true });
     try {
-      const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+      // Generate thumbnail while processing the file
+      const [blob, thumbnail] = await Promise.all([
+        file.arrayBuffer().then((buffer) => new Blob([buffer], { type: file.type })),
+        generateThumbnail(file),
+      ]);
+
       const photo: Photo = {
         id: crypto.randomUUID(),
         blob,
+        thumbnail,
         filename: file.name,
         order: photos.length,
         createdAt: new Date(),

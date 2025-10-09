@@ -3,6 +3,7 @@ import { z } from "zod";
 export interface Photo {
   id: string;
   blob: Blob;
+  thumbnail: Blob; // Square-cropped thumbnail for grid display
   filename: string;
   order: number;
   createdAt: Date;

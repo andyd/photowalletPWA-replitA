@@ -1,18 +1,22 @@
 import { useRef } from 'react';
 import { Plus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { ACCEPTED_IMAGE_TYPES, MAX_PHOTOS } from '@/utils/constants';
 
 interface AddPhotoCardProps {
   onPhotoSelect: (files: FileList) => void;
   disabled?: boolean;
+  photoCount: number;
 }
 
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ACCEPTED_TYPES = ACCEPTED_IMAGE_TYPES;
 
-export function AddPhotoCard({ onPhotoSelect, disabled }: AddPhotoCardProps) {
+export function AddPhotoCard({ onPhotoSelect, disabled, photoCount }: AddPhotoCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isAtLimit = photoCount >= MAX_PHOTOS;
 
   const handleClick = () => {
+    if (isAtLimit) return;
     fileInputRef.current?.click();
   };
 
@@ -39,12 +43,28 @@ export function AddPhotoCard({ onPhotoSelect, disabled }: AddPhotoCardProps) {
       />
       <Card
         onClick={handleClick}
-        className="relative aspect-square overflow-hidden cursor-pointer bg-muted hover-elevate active-elevate-2 flex items-center justify-center border-2 border-dashed"
+        className={`relative aspect-square overflow-hidden flex items-center justify-center border-2 border-dashed ${
+          isAtLimit || disabled
+            ? 'opacity-50 cursor-not-allowed bg-muted'
+            : 'cursor-pointer bg-muted hover-elevate active-elevate-2'
+        }`}
         data-testid="button-add-photo-card"
+        role="button"
+        tabIndex={isAtLimit || disabled ? -1 : 0}
+        aria-label={isAtLimit ? `Photo limit reached: ${MAX_PHOTOS} photos maximum` : 'Add photos to your wallet'}
+        aria-disabled={isAtLimit || disabled}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !isAtLimit && !disabled) {
+            e.preventDefault();
+            handleClick();
+          }
+        }}
       >
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <Plus className="w-8 h-8" />
-          <span className="text-sm font-medium">Add Photos</span>
+          <Plus className="w-8 h-8" aria-hidden="true" />
+          <span className="text-sm font-medium">
+            {isAtLimit ? `Limit: ${MAX_PHOTOS}` : 'Add Photos'}
+          </span>
         </div>
       </Card>
     </>

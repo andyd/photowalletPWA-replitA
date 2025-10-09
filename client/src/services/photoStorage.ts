@@ -6,8 +6,16 @@ class PhotoDatabase extends Dexie {
 
   constructor() {
     super('PhotoWalletDB');
+    // Version 1: Original schema
     this.version(1).stores({
       photos: 'id, order, createdAt',
+    });
+    // Version 2: Added thumbnail support
+    this.version(2).stores({
+      photos: 'id, order, createdAt',
+    }).upgrade(async (trans) => {
+      // Migration: existing photos won't have thumbnails, they'll be generated on next load
+      console.log('Database upgraded to version 2 with thumbnail support');
     });
   }
 }

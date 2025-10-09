@@ -17,7 +17,6 @@ export default function PhotoGridExample() {
       onPhotoClick={(index) => console.log('Photo clicked:', index)}
       onDelete={(id) => console.log('Delete photo:', id)}
       onAddPhotos={(files) => console.log('Add photos:', files)}
-      maxPhotos={10}
     />
   );
 }

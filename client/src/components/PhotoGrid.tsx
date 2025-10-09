@@ -11,8 +11,8 @@ interface PhotoGridProps {
 
 export function PhotoGrid({ photos, onPhotoClick, onDelete, onAddPhotos }: PhotoGridProps) {
   return (
-    <div 
-      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4 pb-8"
+    <div
+      className="grid grid-cols-3 gap-2 p-4 pb-8"
       data-testid="container-photo-grid"
     >
       {photos.map((photo, index) => (
@@ -24,8 +24,9 @@ export function PhotoGrid({ photos, onPhotoClick, onDelete, onAddPhotos }: Photo
           onDelete={onDelete}
         />
       ))}
-      <AddPhotoCard 
+      <AddPhotoCard
         onPhotoSelect={onAddPhotos}
+        photoCount={photos.length}
       />
     </div>
   );
