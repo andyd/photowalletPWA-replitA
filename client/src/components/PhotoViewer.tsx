@@ -1,8 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
+import { X, Share2 } from 'lucide-react';
 import { useGesture } from '@use-gesture/react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from '@/components/ui/carousel';
 import { useWebShare } from '@/hooks/useWebShare';
 import { useToast } from '@/hooks/use-toast';
 import { GestureTutorial } from '@/components/GestureTutorial';
@@ -41,9 +49,9 @@ export function PhotoViewer({
   const [showUI, setShowUI] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
   const [showTutorial, setShowTutorial] = useState(false);
-  
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+
   const dragOffsetX = useMotionValue(0);
   const dragOffsetY = useMotionValue(0);
   const closingProgress = useMotionValue(0);
@@ -54,6 +62,28 @@ export function PhotoViewer({
 
   const { canShare, sharePhoto } = useWebShare();
   const { toast } = useToast();
+
+  // Sync carousel with currentIndex
+  useEffect(() => {
+    if (carouselApi && currentIndex !== carouselApi.selectedScrollSnap()) {
+      carouselApi.scrollTo(currentIndex);
+    }
+  }, [currentIndex, carouselApi]);
+
+  // Listen to carousel changes
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const onSelect = () => {
+      const index = carouselApi.selectedScrollSnap();
+      onIndexChange(index);
+    };
+
+    carouselApi.on('select', onSelect);
+    return () => {
+      carouselApi.off('select', onSelect);
+    };
+  }, [carouselApi, onIndexChange]);
 
   useEffect(() => {
     if (!currentPhoto) return;
@@ -123,30 +153,11 @@ export function PhotoViewer({
     }, 3000);
   };
 
-  const goToPrevious = () => {
-    setSlideDirection(-1);
-    if (currentIndex > 0) {
-      onIndexChange(currentIndex - 1);
-    } else {
-      onIndexChange(photos.length - 1);
-    }
-  };
-
-  const goToNext = () => {
-    setSlideDirection(1);
-    if (currentIndex < photos.length - 1) {
-      onIndexChange(currentIndex + 1);
-    } else {
-      onIndexChange(0);
-    }
-  };
-
   const handleClose = () => {
     setIsClosing(true);
-    // Reset drag offsets immediately when closing
     dragOffsetX.set(0);
     dragOffsetY.set(0);
-    
+
     animate(closingProgress, 1, {
       duration: 0.3,
       ease: [0.32, 0.72, 0, 1],
@@ -190,12 +201,12 @@ export function PhotoViewer({
   // Use gesture hook for comprehensive touch handling
   const bind = useGesture(
     {
-      onDrag: ({ offset: [x, y], direction: [dx, dy], movement: [mx, my], velocity: [vx, vy], down, cancel }) => {
+      onDrag: ({ offset: [x, y], movement: [mx, my], down, cancel }) => {
         // If zoomed in, allow panning
         if (scale > 1) {
           setPosition({ x, y });
         } else if (!isClosing) {
-          // While dragging, update offset values for visual feedback (unless closing)
+          // While dragging, update offset values for visual feedback
           if (down) {
             const isVertical = Math.abs(my) > Math.abs(mx);
             if (isVertical) {
@@ -208,22 +219,14 @@ export function PhotoViewer({
           } else {
             // Gesture ended - determine action
             const isVertical = Math.abs(my) > Math.abs(mx);
-            
+
             // Vertical swipe to close
             if (isVertical && Math.abs(my) > 80) {
               cancel();
               handleClose();
-              return; // Don't animate back to center
+              return;
             }
-            // Horizontal swipe for navigation
-            else if (!isVertical && Math.abs(mx) > 60 && Math.abs(vx) > 0.2) {
-              if (dx > 0) {
-                goToPrevious();
-              } else {
-                goToNext();
-              }
-            }
-            
+
             // Animate back to center if no action triggered
             animate(dragOffsetX, 0, { type: 'spring', stiffness: 300, damping: 30 });
             animate(dragOffsetY, 0, { type: 'spring', stiffness: 300, damping: 30 });
@@ -252,11 +255,6 @@ export function PhotoViewer({
         // Long press to show delete dialog
         setShowDeleteDialog(true);
       },
-      onClick: ({ event }) => {
-        event.preventDefault();
-        // Single tap - advance to next photo
-        goToNext();
-      },
     },
     {
       drag: {
@@ -268,7 +266,7 @@ export function PhotoViewer({
         rubberband: true,
       },
       longPress: {
-        threshold: 500, // 500ms hold to trigger
+        threshold: 500,
         filterTaps: true,
       },
     }
@@ -278,32 +276,14 @@ export function PhotoViewer({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
       if (e.key === 'Escape') handleClose();
-      if (e.key === 'ArrowLeft') goToPrevious();
-      if (e.key === 'ArrowRight') goToNext();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentIndex, photos.length]);
+  }, [isOpen]);
 
-  // Don't render if not open, or if closing animation finished
   if (!isOpen || !currentPhoto) return null;
   if (isClosing && closingProgress.get() >= 0.99) return null;
-
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction > 0 ? '-100%' : '100%',
-      opacity: 0,
-    }),
-  };
 
   const closingScale = useTransform(closingProgress, [0, 1], [1, 0.3]);
   const closingOpacity = useTransform(closingProgress, [0, 1], [1, 0]);
@@ -357,89 +337,68 @@ export function PhotoViewer({
           )}
         </motion.div>
 
-        <div
-          ref={imageContainerRef}
-          {...bind()}
-          className="relative w-full h-full flex items-center justify-center touch-none overflow-hidden"
-          role="img"
-          aria-label={`Photo: ${currentPhoto.filename}`}
-          style={{
-            cursor: scale > 1 ? 'grab' : 'default',
+        <Carousel
+          className="w-full h-full"
+          setApi={setCarouselApi}
+          opts={{
+            loop: true,
+            startIndex: currentIndex,
           }}
         >
-          <AnimatePresence initial={false} custom={slideDirection} mode="wait">
-            <motion.div
-              key={currentPhoto.id}
-              custom={slideDirection}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                x: { type: 'spring', stiffness: 300, damping: 30 },
-                opacity: { duration: 0.2 },
-              }}
-              style={{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <motion.div
-                style={{
-                  x: dragOffsetX,
-                  y: dragOffsetY,
-                  scale: isClosing ? closingScale : scale > 1 ? scale : undefined,
-                  opacity: isClosing ? closingOpacity : undefined,
-                }}
-              >
-                <motion.img
-                  src={imageUrl}
-                  alt={currentPhoto.filename}
-                  className="max-w-full max-h-full object-contain select-none"
+          <CarouselContent className="h-full">
+            {photos.map((photo) => (
+              <CarouselItem key={photo.id} className="h-full">
+                <div
+                  ref={imageContainerRef}
+                  {...bind()}
+                  className="relative w-full h-full flex items-center justify-center touch-none"
+                  role="img"
+                  aria-label={`Photo: ${photo.filename}`}
                   style={{
-                    transform: scale > 1 
-                      ? `translate(${position.x / scale}px, ${position.y / scale}px)` 
-                      : undefined,
+                    cursor: scale > 1 ? 'grab' : 'default',
                   }}
-                  data-testid="img-viewer-photo"
-                />
-              </motion.div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+                >
+                  <motion.div
+                    style={{
+                      x: dragOffsetX,
+                      y: dragOffsetY,
+                      scale: isClosing ? closingScale : scale > 1 ? scale : undefined,
+                      opacity: isClosing ? closingOpacity : undefined,
+                    }}
+                  >
+                    <motion.img
+                      src={URL.createObjectURL(photo.blob)}
+                      alt={photo.filename}
+                      className="max-w-full max-h-full object-contain select-none"
+                      style={{
+                        transform: scale > 1
+                          ? `translate(${position.x / scale}px, ${position.y / scale}px)`
+                          : undefined,
+                      }}
+                      data-testid="img-viewer-photo"
+                    />
+                  </motion.div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
 
-        {photos.length > 1 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: showUI && !isClosing ? 1 : 0 }}
-            className="absolute left-4 right-4 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none"
-          >
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={goToPrevious}
-              className="text-white hover:bg-white/20 pointer-events-auto"
-              data-testid="button-previous-photo"
-              aria-label="Previous photo"
+          {photos.length > 1 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: showUI && !isClosing ? 1 : 0 }}
             >
-              <ChevronLeft className="w-8 h-8" aria-hidden="true" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={goToNext}
-              className="text-white hover:bg-white/20 pointer-events-auto"
-              data-testid="button-next-photo"
-              aria-label="Next photo"
-            >
-              <ChevronRight className="w-8 h-8" aria-hidden="true" />
-            </Button>
-          </motion.div>
-        )}
+              <CarouselPrevious
+                className="left-4 text-white hover:bg-white/20 border-white/50"
+                aria-label="Previous photo"
+              />
+              <CarouselNext
+                className="right-4 text-white hover:bg-white/20 border-white/50"
+                aria-label="Next photo"
+              />
+            </motion.div>
+          )}
+        </Carousel>
 
         {scale > 1 && !isClosing && (
           <motion.div
