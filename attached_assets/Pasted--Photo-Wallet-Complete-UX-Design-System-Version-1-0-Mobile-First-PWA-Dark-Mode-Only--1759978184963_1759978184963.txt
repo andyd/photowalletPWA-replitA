@@ -1,0 +1,1118 @@
+# Photo Wallet - Complete UX Design System
+
+**Version 1.0 | Mobile-First PWA | Dark Mode Only**
+
+---
+
+## 📱 Project Overview
+
+**Product Name:** Photo Wallet
+
+**Tagline:** Photos at your fingertips, like dad had in his wallet back in the day.
+
+**Purpose:** Recreate the intimate experience of sharing personal photos from a physical wallet. Users curate a small, meaningful collection (max 12 photos) for instant, full-screen sharing with friends and family—combining nostalgia with modern mobile convenience.
+
+**Platform:** Progressive Web App (PWA) - iOS, Android, Mobile Web only
+
+**Target Audience:** Personal users wanting warm, happy connection to family through photo sharing
+
+---
+
+## 🎯 Brand Principles
+
+### Core Values
+- **Minimal** - UI gets out of the way, photos are the hero
+- **Modern** - Snappy, responsive, slick animations
+- **Retro/Nostalgic** - Film-inspired colors, wallet metaphor
+- **Intimate** - Small curated collection, personal connection
+
+### Brand Voice
+- Friendly but minimal
+- Simple, cool, funny (especially in errors)
+- Not lame, not slow, not corporate
+
+### Emotional Goal
+**Primary emotion:** Warm happy connection to family  
+**Interaction feeling:** Natural, physical, intuitive
+
+---
+
+## 🎨 Color System
+
+### Philosophy
+**Dark canvas, photos as focus.** Black background keeps UI out of the way. When colors appear, they're retro film-inspired accents.
+
+### Core Palette
+
+```
+Primary Background
+--color-bg-primary: #000000        /* Pure black canvas */
+--color-bg-secondary: #0A0A0A      /* Slightly elevated black */
+--color-bg-tertiary: #1A1A1A       /* Modal/card backgrounds */
+
+Text Colors
+--color-text-primary: #FFFFFF      /* Primary text */
+--color-text-secondary: #A0A0A0    /* Secondary/dimmed text */
+--color-text-tertiary: #666666     /* Disabled/placeholder */
+
+Accent Colors (Retro Film-Inspired)
+--color-accent-warm: #E6A157       /* Warm amber (70s film) */
+--color-accent-red: #C44536        /* Faded red (Kodachrome) */
+--color-accent-teal: #4A9B9B       /* Vintage teal */
+--color-accent-cream: #F4E8D8      /* Photo paper cream */
+
+Interactive States
+--color-interactive: #FFFFFF       /* Tap targets */
+--color-interactive-dimmed: #666   /* Inactive */
+--color-loading: #333333           /* Pulsing placeholder */
+
+Semantic Colors (Use sparingly)
+--color-error: #C44536            /* Error states */
+--color-success: #4A9B9B          /* Success moments */
+```
+
+### Usage Guidelines
+- **Background:** Always pure black (#000000)
+- **Photos:** No overlays, filters, or tints - content is king
+- **Icons:** White (#FFFFFF) on black
+- **Accents:** Use retro colors sparingly for moments that need emphasis
+- **No gradients:** Keep flat and clean
+
+---
+
+## ✍️ Typography System
+
+### Font Stack
+
+**Primary Font:** System Sans-Serif  
+```css
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 
+             'Helvetica Neue', Arial, sans-serif;
+```
+
+**Why:** Native system fonts ensure fast load, familiar feel, optimal mobile rendering
+
+**Alternative:** If custom font desired, consider:
+- **Modern:** Inter, SF Pro Display, Helvetica Now
+- **Retro:** Neue Haas Grotesk, Futura PT, Space Grotesk
+
+### Type Scale
+
+```css
+/* Hierarchy */
+--font-size-h1: 32px;      /* Empty state headline */
+--font-size-h2: 24px;      /* Modal titles */
+--font-size-body: 16px;    /* Default text */
+--font-size-caption: 14px; /* Small labels */
+--font-size-label: 12px;   /* Micro-copy */
+
+/* Weights */
+--font-weight-regular: 400;
+--font-weight-medium: 500;
+--font-weight-bold: 700;
+
+/* Line Heights */
+--line-height-tight: 1.2;   /* Headlines */
+--line-height-normal: 1.5;  /* Body */
+--line-height-loose: 1.7;   /* Comfortable reading */
+
+/* Letter Spacing */
+--letter-spacing-tight: -0.02em;   /* Large headlines */
+--letter-spacing-normal: 0em;      /* Default */
+--letter-spacing-wide: 0.05em;     /* All caps labels */
+```
+
+### Typography Rules
+- **Minimal text:** Only show when necessary or when app is tapped
+- **Larger when needed:** Make text big and clear when it appears, then hide it
+- **No text on photos:** Zero UI or captions on fullscreen images
+- **System optimized:** Use platform defaults for maximum legibility
+
+---
+
+## 📐 Layout & Grid System
+
+### Grid Philosophy
+**Mobile-first, gesture-driven, fullscreen focus**
+
+### Grid View Specifications
+
+```
+Layout: 3 columns × 4 rows (max 12 photos)
+Column width: (100vw - 32px) / 3
+Gap: 8px between thumbnails
+Padding: 16px edge margins
+Thumbnail aspect: 1:1 (square)
+Corner radius: 2-3px (subtle)
+```
+
+**Thumbnail Grid CSS:**
+```css
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 16px;
+  background: #000000;
+}
+
+.photo-thumbnail {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  overflow: hidden;
+  cursor: pointer;
+  /* No borders or shadows */
+}
+```
+
+### Fullscreen Carousel
+
+```
+Layout: 100vw × 100vh (edge-to-edge)
+Navigation: Horizontal swipe (snap scroll)
+Image spacing: 4px gap between images (minimal)
+Snap behavior: Center-aligned, one image at a time
+```
+
+**Carousel CSS:**
+```css
+.photo-carousel {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 4px; /* Minimal space to see next image edge */
+  background: #000000;
+}
+
+.photo-slide {
+  flex: 0 0 100vw;
+  scroll-snap-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-slide img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+```
+
+### Touch Targets
+**All interactive elements minimum 44×44px**
+
+```css
+--touch-target-min: 44px;
+--touch-target-comfortable: 56px;
+--touch-target-large: 64px;
+```
+
+### Spacing Scale
+
+```css
+/* 4px base unit */
+--space-xs: 4px;
+--space-sm: 8px;
+--space-md: 16px;
+--space-lg: 24px;
+--space-xl: 32px;
+--space-2xl: 48px;
+```
+
+---
+
+## 🧩 Component Library
+
+### Top Bar (Grid View Only)
+
+**Position:** Fixed top  
+**Background:** Subtle gradient fade to black (optional) or transparent  
+**Height:** 56px  
+**Content:** Settings icon (left), Add icon (right)
+
+```html
+<header class="top-bar">
+  <button class="icon-button" aria-label="Settings">
+    <svg><!-- Gear icon --></svg>
+  </button>
+  <button class="icon-button" aria-label="Add photos">
+    <svg><!-- Plus icon --></svg>
+  </button>
+</header>
+```
+
+```css
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  z-index: 100;
+  background: transparent; /* or subtle gradient */
+}
+
+.icon-button {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+
+.icon-button:active {
+  opacity: 0.6;
+}
+
+.icon-button svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+```
+
+**Icons:**
+- Settings: Simple gear icon (outlined)
+- Add: Simple plus icon (outlined)
+- Style: 2px stroke, minimal line icons
+
+---
+
+### Buttons
+
+**Philosophy:** Icons only, no text labels, oversized tap targets
+
+**Primary Button (for modals):**
+```css
+.button-primary {
+  min-width: 120px;
+  height: 48px;
+  padding: 0 24px;
+  background: #FFFFFF;
+  color: #000000;
+  border: none;
+  border-radius: 24px; /* Pill shape */
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.button-primary:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+```
+
+**Secondary Button:**
+```css
+.button-secondary {
+  min-width: 120px;
+  height: 48px;
+  padding: 0 24px;
+  background: transparent;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.button-secondary:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+```
+
+---
+
+### Modals & Dialogs
+
+**Centered Modal (for input required):**
+
+```html
+<div class="modal-overlay">
+  <div class="modal-card">
+    <h2>Modal Title</h2>
+    <p>Description text here</p>
+    <div class="modal-actions">
+      <button class="button-secondary">Cancel</button>
+      <button class="button-primary">Confirm</button>
+    </div>
+  </div>
+</div>
+```
+
+```css
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8); /* Dark backdrop */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 200ms ease;
+}
+
+.modal-card {
+  background: #1A1A1A;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal-card h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #FFFFFF;
+}
+
+.modal-card p {
+  font-size: 16px;
+  color: #A0A0A0;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+```
+
+**Minimal Alert (for notifications):**
+
+```html
+<div class="alert">
+  <p>Your wallet is full, remove photos to add others.</p>
+</div>
+```
+
+```css
+.alert {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(26, 26, 26, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 20px 24px;
+  border-radius: 12px;
+  max-width: 280px;
+  text-align: center;
+  z-index: 1000;
+  animation: scaleIn 250ms ease;
+}
+
+.alert p {
+  font-size: 16px;
+  color: #FFFFFF;
+  line-height: 1.5;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+```
+
+---
+
+### Loading States
+
+**Pulsing Placeholder (for grid thumbnails):**
+
+```html
+<div class="photo-thumbnail loading">
+  <div class="pulse"></div>
+</div>
+```
+
+```css
+.photo-thumbnail.loading {
+  background: #1A1A1A;
+}
+
+.pulse {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #1A1A1A 0%,
+    #333333 50%,
+    #1A1A1A 100%
+  );
+  background-size: 200% 100%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+```
+
+---
+
+### Empty State
+
+```html
+<div class="empty-state">
+  <h1>Photo Wallet</h1>
+  <p>Photos at your fingertips,<br>like dad had in his wallet back in the day.</p>
+  <button class="button-primary">Add Photos</button>
+</div>
+```
+
+```css
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px;
+  text-align: center;
+  background: #000000;
+}
+
+.empty-state h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #FFFFFF;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #A0A0A0;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  max-width: 300px;
+}
+```
+
+---
+
+## ⚡ Animation System
+
+### Philosophy
+**Natural, physical, snappy. Animations feel real and responsive, never sluggish.**
+
+### Timing & Easing
+
+```css
+/* Durations */
+--duration-instant: 100ms;
+--duration-fast: 150ms;
+--duration-normal: 200ms;
+--duration-slow: 300ms;
+
+/* Easing curves */
+--ease-out: cubic-bezier(0.33, 1, 0.68, 1);        /* Snappy exit */
+--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);     /* Smooth both ways */
+--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);  /* Subtle bounce */
+```
+
+### Core Animations
+
+**1. Grid → Fullscreen Transition**
+
+When thumbnail tapped, it quickly expands to fill screen while other content fades.
+
+```css
+/* Thumbnail tap */
+.photo-thumbnail.expanding {
+  animation: expandToFullscreen 200ms var(--ease-out) forwards;
+  z-index: 999;
+}
+
+@keyframes expandToFullscreen {
+  from {
+    transform: scale(1);
+    border-radius: 3px;
+  }
+  to {
+    transform: scale(3);
+    border-radius: 0;
+    opacity: 1;
+  }
+}
+
+/* Grid fade out */
+.photo-grid.transitioning {
+  animation: fadeOut 150ms ease forwards;
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+```
+
+**2. Carousel Snap Behavior**
+
+```css
+.photo-carousel {
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS momentum */
+}
+
+/* Quick snap when user stops swiping */
+.photo-slide {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+```
+
+**3. Photo Loading**
+
+Thumbnails fill pulsing squares quickly in order.
+
+```css
+.photo-thumbnail img {
+  animation: fadeIn 250ms ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+```
+
+**4. Add Photo**
+
+New photos appear in first available slot.
+
+```css
+.photo-thumbnail.newly-added {
+  animation: scaleIn 200ms var(--ease-spring);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+```
+
+### Micro-Interactions
+
+**Haptic Feedback:**
+```javascript
+// Minimal buzz when image snaps into view
+const triggerHaptic = () => {
+  if ('vibrate' in navigator) {
+    navigator.vibrate(10); // 10ms subtle buzz
+  }
+};
+
+// Fire on snap complete
+carousel.addEventListener('scrollend', () => {
+  triggerHaptic();
+});
+```
+
+**Thumbnail Tap Scale:**
+```css
+.photo-thumbnail:active {
+  transform: scale(0.95);
+  transition: transform 100ms ease;
+}
+```
+
+---
+
+## 💬 Content & Microcopy
+
+### Voice & Tone
+- **Friendly but minimal:** Say just enough
+- **Simple, cool, funny:** Especially for errors
+- **No jargon:** Clear and direct
+
+### Key Messages
+
+**Empty State:**
+```
+Photo Wallet
+Photos at your fingertips, like dad had in his wallet back in the day.
+
+[Add Photos]
+```
+
+**Wallet Full (12/12):**
+```
+Your wallet is full, remove photos to add others.
+```
+
+**Error States:**
+```
+// Failed to load
+"Oops, that photo didn't want to be in your wallet."
+
+// Upload failed
+"Hmm, that one's camera-shy. Try another?"
+
+// Generic error
+"Something went sideways. Give it another shot?"
+```
+
+**Settings Screen:**
+```
+Settings
+- About Photo Wallet
+- Clear All Photos
+- Privacy Policy
+- Share Feedback
+```
+
+### Copy Guidelines
+- **Brevity:** Use 5-10 words max for instructions
+- **Personality:** A little humor, but don't overdo it
+- **Clarity:** Always clear what action will happen
+- **No captions on photos:** Keep fullscreen view pure
+
+---
+
+## 🎯 User Flows
+
+### Core User Journey
+
+**1. First Launch (Empty State)**
+```
+Open app → See empty state → Tap "Add Photos" 
+→ Photo picker → Select 1-12 photos → Photos load into grid
+```
+
+**2. View Photos (Primary Use Case)**
+```
+Open app → See grid → Tap thumbnail 
+→ Expand to fullscreen → Swipe between photos 
+→ Minimal haptic on snap → Tap to return to grid
+```
+
+**3. Add More Photos**
+```
+Grid view → Tap + icon → Photo picker 
+→ Select photos → Fill empty slots (or show "wallet full")
+```
+
+**4. Manage Collection**
+```
+Grid view → Long-press thumbnail → Delete option 
+→ Confirm → Photo removed → Grid reflows
+```
+
+### Navigation Map
+
+```
+Grid View (Home)
+├── Tap thumbnail → Fullscreen Carousel
+│   ├── Swipe left/right → Navigate photos
+│   └── Tap anywhere → Return to grid
+├── Tap + icon → Photo picker → Add photos
+└── Tap ⚙️ icon → Settings
+    ├── About
+    ├── Clear All (confirmation modal)
+    └── Back to grid
+```
+
+### Gesture Map
+
+```
+Grid View:
+- Tap thumbnail → Open fullscreen
+- Long-press thumbnail → Delete (future)
+- Tap + → Add photos
+- Tap ⚙️ → Settings
+
+Fullscreen Carousel:
+- Swipe left → Previous photo
+- Swipe right → Next photo
+- Tap anywhere → Back to grid
+- No pinch/zoom (keep simple)
+```
+
+---
+
+## ♿ Accessibility
+
+### Current Scope
+**Basic mobile accessibility with oversized touch targets.**
+
+### Requirements
+
+**Touch Targets:**
+```css
+/* All interactive elements */
+min-width: 44px;
+min-height: 44px;
+```
+
+**Focus States:**
+```css
+.icon-button:focus-visible {
+  outline: 2px solid #FFFFFF;
+  outline-offset: 2px;
+}
+
+.photo-thumbnail:focus-visible {
+  outline: 2px solid #FFFFFF;
+  outline-offset: 4px;
+}
+```
+
+**ARIA Labels:**
+```html
+<button aria-label="Add photos">
+  <svg aria-hidden="true">...</svg>
+</button>
+
+<button aria-label="Settings">
+  <svg aria-hidden="true">...</svg>
+</button>
+
+<img src="photo.jpg" alt="Photo 1 of 8">
+```
+
+**Screen Reader Support:**
+```html
+<!-- Grid photo count -->
+<div role="status" aria-live="polite">
+  8 photos in your wallet
+</div>
+
+<!-- Current photo in carousel -->
+<div role="status" aria-live="polite">
+  Photo 3 of 8
+</div>
+```
+
+### Future Enhancements
+- Reduced motion support (disable animations)
+- Larger text option
+- High contrast mode
+- Full keyboard navigation
+
+---
+
+## 📱 Responsive Behavior
+
+### Mobile-Only Focus
+**Photo Wallet is designed exclusively for mobile devices.**
+
+### Breakpoints
+
+```css
+/* Small phones */
+@media (max-width: 360px) {
+  .photo-grid {
+    gap: 6px;
+    padding: 12px;
+  }
+}
+
+/* Standard phones */
+@media (min-width: 361px) and (max-width: 768px) {
+  /* Default styles */
+}
+
+/* Large phones / small tablets */
+@media (min-width: 769px) {
+  .photo-grid {
+    gap: 12px;
+    padding: 24px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+```
+
+### Safe Areas (iOS Notch/Home Indicator)
+
+```css
+.top-bar {
+  padding-top: env(safe-area-inset-top);
+}
+
+.photo-grid {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+.photo-carousel {
+  /* Fullscreen respects safe areas */
+  height: 100dvh; /* Dynamic viewport height */
+}
+```
+
+---
+
+## 🛠️ Design Tokens (Dev Handoff)
+
+### Color Tokens
+```json
+{
+  "color": {
+    "background": {
+      "primary": "#000000",
+      "secondary": "#0A0A0A",
+      "tertiary": "#1A1A1A"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#A0A0A0",
+      "tertiary": "#666666"
+    },
+    "accent": {
+      "warm": "#E6A157",
+      "red": "#C44536",
+      "teal": "#4A9B9B",
+      "cream": "#F4E8D8"
+    },
+    "interactive": "#FFFFFF",
+    "loading": "#333333"
+  }
+}
+```
+
+### Spacing Tokens
+```json
+{
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px",
+    "xl": "32px",
+    "2xl": "48px"
+  }
+}
+```
+
+### Typography Tokens
+```json
+{
+  "typography": {
+    "fontSize": {
+      "h1": "32px",
+      "h2": "24px",
+      "body": "16px",
+      "caption": "14px",
+      "label": "12px"
+    },
+    "fontWeight": {
+      "regular": 400,
+      "medium": 500,
+      "bold": 700
+    },
+    "lineHeight": {
+      "tight": 1.2,
+      "normal": 1.5,
+      "loose": 1.7
+    }
+  }
+}
+```
+
+### Animation Tokens
+```json
+{
+  "animation": {
+    "duration": {
+      "instant": "100ms",
+      "fast": "150ms",
+      "normal": "200ms",
+      "slow": "300ms"
+    },
+    "easing": {
+      "out": "cubic-bezier(0.33, 1, 0.68, 1)",
+      "inOut": "cubic-bezier(0.65, 0, 0.35, 1)",
+      "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)"
+    }
+  }
+}
+```
+
+---
+
+## 🚀 Implementation Notes
+
+### Technical Stack Recommendations
+- **Framework:** React Native / Flutter / PWA vanilla
+- **Gestures:** Framer Motion, React Spring, or native gesture handlers
+- **Image optimization:** WebP with lazy loading
+- **PWA features:** Service worker for offline, install prompt
+
+### Performance Targets
+- **First load:** < 2s
+- **Grid render:** < 300ms
+- **Thumbnail tap to fullscreen:** < 200ms
+- **Swipe response:** < 16ms (60fps)
+- **Image load:** Progressive, show placeholder immediately
+
+### Browser Support
+- iOS Safari 14+
+- Chrome Mobile 90+
+- Samsung Internet 14+
+- Firefox Mobile 90+
+
+---
+
+## ✅ Design Checklist
+
+**Visual Design:**
+- [ ] Dark black background (#000000) throughout
+- [ ] Photos display edge-to-edge, no overlays
+- [ ] Retro film colors used sparingly for accents
+- [ ] No gradients, flat UI
+- [ ] 2-3px rounded corners on thumbnails
+
+**Layout:**
+- [ ] Grid: 3 columns × 4 rows max (12 photos)
+- [ ] 8px gap between thumbnails
+- [ ] Fullscreen carousel with 4px spacing
+- [ ] Top bar only on grid view (+ and ⚙️)
+- [ ] Safe area insets respected
+
+**Typography:**
+- [ ] System sans-serif for native feel
+- [ ] Text only when necessary
+- [ ] Large, clear type when shown
+- [ ] No text on fullscreen photos
+
+**Interactions:**
+- [ ] Tap thumbnail → quick expand to fullscreen
+- [ ] Smooth horizontal swipe in carousel
+- [ ] Quick snap to lock on image
+- [ ] Minimal haptic buzz on snap (10ms)
+- [ ] Oversized touch targets (44×44px min)
+
+**Content:**
+- [ ] Empty state copy: "Photos at your fingertips, like dad had..."
+- [ ] Wallet full: "Your wallet is full, remove photos to add others"
+- [ ] Error messages: Simple, cool, funny tone
+- [ ] No captions or names on photos
+
+**Performance:**
+- [ ] Pulsing placeholders while loading
+- [ ] Photos load progressively
+- [ ] Smooth 60fps animations
+- [ ] Quick, responsive feel throughout
+
+---
+
+## 🎨 Visual Reference
+
+### Color Palette Visual
+```
+███████ #000000 - Background Primary (Pure Black)
+███████ #0A0A0A - Background Secondary  
+███████ #1A1A1A - Background Tertiary (Modals)
+
+███████ #FFFFFF - Text Primary / Interactive
+███████ #A0A0A0 - Text Secondary
+███████ #666666 - Text Tertiary
+
+███████ #E6A157 - Accent Warm (70s Amber)
+███████ #C44536 - Accent Red (Kodachrome)
+███████ #4A9B9B - Accent Teal (Vintage)
+███████ #F4E8D8 - Accent Cream (Photo Paper)
+```
+
+### Example UI States
+
+**Grid View:**
+```
+┌─────────────────────────┐
+│  ⚙️          Photo Wallet         + │  ← Top bar, minimal
+├─────────────────────────┤
+│                         │
+│  [📷] [📷] [📷]         │  ← 3 columns
+│                         │
+│  [📷] [📷] [📷]         │  ← Square thumbnails
+│                         │
+│  [📷] [📷] [▫️]         │  ← 2-3px rounded
+│                         │
+│  [▫️] [▫️] [▫️]         │  ← Empty slots (dashed)
+│                         │
+└─────────────────────────┘
+```
+
+**Fullscreen Carousel:**
+```
+┌─────────────────────────┐
+│                         │
+│                         │
+│                         │
+│        📷               │  ← Photo fills screen
+│      (Photo)            │  ← No UI visible
+│                         │
+│                         │
+│                         │
+│                         │
+└─────────────────────────┘
+       ◀ swipe ▶             ← Gesture hint only
+```
+
+---
+
+## 📄 Version History
+
+**v1.0** - Initial design system  
+- Core brand, colors, typography
+- Grid + carousel specifications
+- Animation system
+- Component library
+- Content guidelines
+
+---
+
+**Design System Owner:** [Your Name]  
+**Last Updated:** 2025  
+**Status:** Ready for Development
+
+---
+
+## 🔗 Quick Links
+
+- [ ] Figma Design File (when created)
+- [ ] Component Storybook (when built)
+- [ ] GitHub Repository
+- [ ] User Testing Notes
+
+---
+
+**End of Design System**
