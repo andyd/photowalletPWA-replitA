@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Home from "@/pages/Home";
 import GitHubSetup from "@/pages/GitHubSetup";
+import Mockups from "@/pages/Mockups";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -13,6 +14,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/github-setup" component={GitHubSetup} />
+      <Route path="/mockups" component={Mockups} />
       <Route component={NotFound} />
     </Switch>
   );
