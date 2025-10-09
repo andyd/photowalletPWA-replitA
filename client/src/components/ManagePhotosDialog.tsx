@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Trash2, Image as ImageIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -21,15 +20,15 @@ interface ManagePhotosDialogProps {
 export function ManagePhotosDialog({ photos, open, onOpenChange, onDelete }: ManagePhotosDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh]" data-testid="dialog-manage-photos">
-        <DialogHeader>
-          <DialogTitle>Manage Photos</DialogTitle>
-          <DialogDescription>
-            Select photos to remove from your wallet
+      <DialogContent className="bg-black border-white/10 max-w-2xl max-h-[80vh]" data-testid="dialog-manage-photos">
+        <DialogHeader className="text-center">
+          <DialogTitle className="text-white text-xl">Manage Photos</DialogTitle>
+          <DialogDescription className="text-white/50">
+            Tap photos to remove
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[500px] pr-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2">
             {photos.map((photo) => (
               <PhotoItem
                 key={photo.id}
@@ -54,8 +53,12 @@ function PhotoItem({ photo, onDelete }: { photo: Photo; onDelete: (id: string) =
   }, [photo.blob]);
 
   return (
-    <div className="relative group">
-      <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+    <div className="relative">
+      <button
+        onClick={() => onDelete(photo.id)}
+        className="w-full aspect-square overflow-hidden transition-opacity active:opacity-60 group"
+        data-testid={`button-manage-delete-${photo.id}`}
+      >
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -63,23 +66,15 @@ function PhotoItem({ photo, onDelete }: { photo: Photo; onDelete: (id: string) =
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+          <div className="w-full h-full flex items-center justify-center bg-white/5">
+            <ImageIcon className="w-8 h-8 text-white/30" />
           </div>
         )}
-      </div>
-      <Button
-        size="icon"
-        variant="destructive"
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={() => onDelete(photo.id)}
-        data-testid={`button-manage-delete-${photo.id}`}
-      >
-        <Trash2 className="w-4 h-4" />
-      </Button>
-      <p className="text-xs text-muted-foreground mt-1 truncate" title={photo.filename}>
-        {photo.filename}
-      </p>
+        {/* Delete overlay on hover/press */}
+        <div className="absolute inset-0 bg-[#C44536]/0 group-hover:bg-[#C44536]/80 transition-colors flex items-center justify-center">
+          <Trash2 className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
+      </button>
     </div>
   );
 }

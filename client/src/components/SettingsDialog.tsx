@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, Trash2, Images, Moon, Sun, Monitor, Download, Github } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import {
@@ -12,8 +12,6 @@ import {
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -22,7 +20,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ManagePhotosDialog } from './ManagePhotosDialog';
 import { InstallInstructionsDialog } from './InstallInstructionsDialog';
-import { useTheme } from '@/components/ThemeProvider';
 import { usePWA } from '@/hooks/usePWA';
 import { useToast } from '@/hooks/use-toast';
 import { hardResetApp } from '@/utils/hardReset';
@@ -45,7 +42,6 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto, open: extern
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showManagePhotos, setShowManagePhotos] = useState(false);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
-  const { theme, setTheme } = useTheme();
   const { isInstallable, isInstalled, installApp } = usePWA();
   const { toast } = useToast();
 
@@ -97,111 +93,56 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto, open: extern
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button size="icon" variant="ghost" data-testid="button-settings">
-            <Settings className="w-5 h-5" />
-          </Button>
-        </DialogTrigger>
-        <DialogContent data-testid="dialog-settings">
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-            <DialogDescription>
-              Manage your Photo Wallet settings
+        {!externalOpen && (
+          <DialogTrigger asChild>
+            <Button size="icon" variant="ghost" data-testid="button-settings">
+              <Settings className="w-5 h-5" />
+            </Button>
+          </DialogTrigger>
+        )}
+        <DialogContent className="bg-black border-white/10" data-testid="dialog-settings">
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-white text-xl">Settings</DialogTitle>
+            <DialogDescription className="text-white/50">
+              {photos.length} of 12 photos
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Theme</h3>
-              <div className="flex gap-2">
-                <Button
-                  variant={theme === 'dark' ? 'default' : 'outline'}
-                  className="flex-1 justify-start"
-                  onClick={() => setTheme('dark')}
-                  data-testid="button-theme-dark"
-                >
-                  <Moon className="w-4 h-4 mr-2" />
-                  Dark
-                </Button>
-                <Button
-                  variant={theme === 'light' ? 'default' : 'outline'}
-                  className="flex-1 justify-start"
-                  onClick={() => setTheme('light')}
-                  data-testid="button-theme-light"
-                >
-                  <Sun className="w-4 h-4 mr-2" />
-                  Light
-                </Button>
-                <Button
-                  variant={theme === 'system' ? 'default' : 'outline'}
-                  className="flex-1 justify-start"
-                  onClick={() => setTheme('system')}
-                  data-testid="button-theme-system"
-                >
-                  <Monitor className="w-4 h-4 mr-2" />
-                  System
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">App</h3>
-              {isInstalled ? (
-                <div className="text-sm text-muted-foreground px-3 py-2" data-testid="text-app-installed">
-                  App is installed on your device
-                </div>
-              ) : (
-                <Button
-                  variant="secondary"
-                  className="w-full justify-start"
-                  onClick={handleInstall}
-                  data-testid="button-install-app"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Install App
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Photos</h3>
-              <Button
-                variant="secondary"
-                className="w-full justify-start"
-                onClick={handleManagePhotos}
-                data-testid="button-manage-photos"
+          <div className="py-4 space-y-3">
+            {!isInstalled && (
+              <button
+                onClick={handleInstall}
+                className="w-full py-3 px-4 bg-white/10 hover:bg-white/15 active:bg-white/20 text-white rounded-full transition-colors text-center"
+                data-testid="button-install-app"
               >
-                <Images className="w-4 h-4 mr-2" />
-                Manage Photos
-              </Button>
-            </div>
+                Install App
+              </button>
+            )}
+            
+            <button
+              onClick={handleManagePhotos}
+              className="w-full py-3 px-4 bg-white/10 hover:bg-white/15 active:bg-white/20 text-white rounded-full transition-colors text-center"
+              data-testid="button-manage-photos"
+            >
+              Manage Photos
+            </button>
 
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Backup</h3>
-              <Link href="/github-setup">
-                <Button
-                  variant="secondary"
-                  className="w-full justify-start"
-                  onClick={() => setIsOpen(false)}
-                  data-testid="button-github-setup"
-                >
-                  <Github className="w-4 h-4 mr-2" />
-                  Push to GitHub
-                </Button>
-              </Link>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Danger Zone</h3>
-              <Button
-                variant="destructive"
-                className="w-full justify-start"
-                onClick={() => setShowResetConfirm(true)}
-                data-testid="button-reset-app"
+            <Link href="/github-setup">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="w-full py-3 px-4 bg-white/10 hover:bg-white/15 active:bg-white/20 text-white rounded-full transition-colors text-center"
+                data-testid="button-github-setup"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Hard Reset & Clear All Data
-              </Button>
-            </div>
+                Push to GitHub
+              </button>
+            </Link>
+
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="w-full py-3 px-4 bg-[#C44536]/20 hover:bg-[#C44536]/30 active:bg-[#C44536]/40 text-[#C44536] rounded-full transition-colors text-center"
+              data-testid="button-reset-app"
+            >
+              Hard Reset
+            </button>
           </div>
         </DialogContent>
       </Dialog>
@@ -214,27 +155,28 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto, open: extern
       />
 
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-        <AlertDialogContent data-testid="dialog-reset-confirm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hard Reset App?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will:
-              <br />• Delete all your photos
-              <br />• Clear service worker and caches
-              <br />• Reload with fresh version from server
-              <br /><br />
-              This action cannot be undone.
+        <AlertDialogContent className="bg-black border-white/10" data-testid="dialog-reset-confirm">
+          <AlertDialogHeader className="text-center">
+            <AlertDialogTitle className="text-white text-xl">Hard Reset?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/70 text-center">
+              This will delete all photos and app data. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-reset">Cancel</AlertDialogCancel>
-            <AlertDialogAction
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <button
               onClick={handleReset}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="w-full py-3 px-4 bg-[#C44536] hover:bg-[#C44536]/80 active:bg-[#C44536]/60 text-white rounded-full transition-colors"
               data-testid="button-confirm-reset"
             >
-              Hard Reset
-            </AlertDialogAction>
+              Reset Everything
+            </button>
+            <button
+              onClick={() => setShowResetConfirm(false)}
+              className="w-full py-3 px-4 bg-white/10 hover:bg-white/15 active:bg-white/20 text-white rounded-full transition-colors"
+              data-testid="button-cancel-reset"
+            >
+              Cancel
+            </button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
