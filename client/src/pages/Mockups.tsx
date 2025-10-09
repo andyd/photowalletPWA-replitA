@@ -92,7 +92,7 @@ export default function Mockups() {
 
           {/* Photo Grid */}
           <div className="pt-14 px-4 pb-8">
-            <div className="grid grid-cols-3 gap-2 max-w-md mx-auto">
+            <div className="grid grid-cols-3 gap-0 max-w-md mx-auto">
               {/* Existing photos */}
               {samplePhotos.map((photo) => (
                 <button
