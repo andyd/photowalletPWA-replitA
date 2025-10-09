@@ -10,41 +10,17 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem('photo-wallet-theme');
-    return (stored as Theme) || 'dark';
-  });
+  // Photo Wallet is dark mode only
+  const theme: Theme = 'dark';
 
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove('light', 'dark');
+    root.classList.add('dark');
+  }, []);
 
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
-  }, [theme]);
-
-  useEffect(() => {
-    localStorage.setItem('photo-wallet-theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => {
-        const root = document.documentElement;
-        root.classList.remove('light', 'dark');
-        const systemTheme = mediaQuery.matches ? 'dark' : 'light';
-        root.classList.add(systemTheme);
-      };
-
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme]);
+  // No-op setTheme since we're dark mode only
+  const setTheme = () => {};
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

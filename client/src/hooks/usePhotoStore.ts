@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import type { Photo } from '@shared/schema';
 import { photoStorage } from '@/services/photoStorage';
 
+export const MAX_PHOTOS = 12; // Photo Wallet limit - curated collection
+
 interface PhotoStore {
   photos: Photo[];
   isLoading: boolean;
@@ -36,6 +38,12 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
 
   addPhoto: async (file: File) => {
     const { photos } = get();
+    
+    // Check if wallet is full (12 photos max)
+    if (photos.length >= MAX_PHOTOS) {
+      throw new Error('WALLET_FULL');
+    }
+    
     set({ isLoading: true });
     try {
       const blob = new Blob([await file.arrayBuffer()], { type: file.type });

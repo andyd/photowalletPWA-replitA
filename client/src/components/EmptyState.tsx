@@ -1,36 +1,25 @@
-import { Upload, Wallet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-
 interface EmptyStateProps {
   onUploadClick: () => void;
 }
 
 export function EmptyState({ onUploadClick }: EmptyStateProps) {
   return (
-    <div className="flex items-center justify-center min-h-[60vh] px-4">
-      <Card className="p-12 text-center max-w-md w-full">
-        <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-            <Wallet className="w-10 h-10 text-muted-foreground" />
-          </div>
-        </div>
-        <h2 className="text-2xl font-semibold mb-3" data-testid="text-empty-title">
-          No Photos Yet
-        </h2>
-        <p className="text-muted-foreground mb-8" data-testid="text-empty-description">
-          Add your first cherished photo to start building your digital wallet collection.
-        </p>
-        <Button 
-          size="lg" 
-          onClick={onUploadClick}
-          data-testid="button-add-first-photo"
-          className="w-full"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Add Your First Photo
-        </Button>
-      </Card>
+    <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center bg-black">
+      <h1 className="text-[32px] font-bold mb-4 tracking-tight text-white" data-testid="text-empty-title">
+        Photo Wallet
+      </h1>
+      <p className="text-[16px] text-muted-foreground leading-[1.6] mb-8 max-w-[300px]" data-testid="text-empty-description">
+        Photos at your fingertips,<br />
+        like dad had in his wallet<br />
+        back in the day.
+      </p>
+      <button
+        onClick={onUploadClick}
+        data-testid="button-add-first-photo"
+        className="min-w-[140px] h-12 px-6 bg-white text-black rounded-full font-semibold text-[16px] transition-all active:scale-95 active:opacity-90"
+      >
+        Add Photos
+      </button>
     </div>
   );
 }

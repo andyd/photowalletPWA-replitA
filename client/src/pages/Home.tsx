@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { usePhotoStore } from '@/hooks/usePhotoStore';
+import { Settings, Plus } from 'lucide-react';
+import { usePhotoStore, MAX_PHOTOS } from '@/hooks/usePhotoStore';
 import { usePWA } from '@/hooks/usePWA';
-import { Header } from '@/components/Header';
-import { PhotoCounter } from '@/components/PhotoCounter';
 import { EmptyState } from '@/components/EmptyState';
 import { PhotoGrid } from '@/components/PhotoGrid';
 import { PhotoViewer } from '@/components/PhotoViewer';
 import { SettingsDialog } from '@/components/SettingsDialog';
-import { InstallBanner } from '@/components/InstallBanner';
 import { UpdateNotification } from '@/components/UpdateNotification';
 import { photoStorage } from '@/services/photoStorage';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +40,7 @@ export default function Home() {
   const { toast } = useToast();
   const [duplicateFile, setDuplicateFile] = useState<File | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const pendingFilesRef = useRef<File[]>([]);
 
   useEffect(() => {
@@ -110,11 +109,19 @@ export default function Home() {
         description: file.name,
       });
     } catch (error) {
-      toast({
-        title: 'Failed to add photo',
-        description: file.name,
-        variant: 'destructive',
-      });
+      if (error instanceof Error && error.message === 'WALLET_FULL') {
+        toast({
+          title: 'Your wallet is full',
+          description: 'Remove photos to add more (12 max)',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Failed to add photo',
+          description: file.name,
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -136,32 +143,46 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative bg-black">
       {photos.length === 0 ? (
-        <>
-          <Header />
-          <EmptyState onUploadClick={handleUploadClick} />
-        </>
+        <EmptyState onUploadClick={handleUploadClick} />
       ) : (
         <>
-          <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold tracking-tight" data-testid="text-app-title">
-              Photo Wallet
-            </h1>
-            <div className="flex items-center gap-2">
-              <PhotoCounter count={photos.length} />
-              <SettingsDialog 
-                photos={photos}
-                onResetApp={handleResetApp}
-                onDeletePhoto={deletePhoto}
-              />
-            </div>
+          {/* Top Bar - Icon only */}
+          <header className="fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 z-10">
+            <button
+              onClick={() => setShowSettings(true)}
+              className="w-11 h-11 flex items-center justify-center text-white transition-opacity active:opacity-60"
+              aria-label="Settings"
+              data-testid="button-settings"
+            >
+              <Settings className="w-6 h-6" strokeWidth={2} />
+            </button>
+            <button
+              onClick={handleUploadClick}
+              className="w-11 h-11 flex items-center justify-center text-white transition-opacity active:opacity-60"
+              aria-label="Add photos"
+              data-testid="button-add-photos"
+            >
+              <Plus className="w-6 h-6" strokeWidth={2} />
+            </button>
+          </header>
+
+          <div className="pt-14">
+            <PhotoGrid
+              photos={photos}
+              onPhotoClick={openViewer}
+              onDelete={deletePhoto}
+              onAddPhotos={handleAddPhotos}
+            />
           </div>
-          <PhotoGrid
+
+          <SettingsDialog 
             photos={photos}
-            onPhotoClick={openViewer}
-            onDelete={deletePhoto}
-            onAddPhotos={handleAddPhotos}
+            onResetApp={handleResetApp}
+            onDeletePhoto={deletePhoto}
+            open={showSettings}
+            onOpenChange={setShowSettings}
           />
         </>
       )}
@@ -206,8 +227,6 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <InstallBanner photoCount={photos.length} />
       
       {updateAvailable && <UpdateNotification onUpdate={applyUpdate} />}
     </div>

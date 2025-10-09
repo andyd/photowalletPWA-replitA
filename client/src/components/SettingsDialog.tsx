@@ -32,10 +32,16 @@ interface SettingsDialogProps {
   photos: Photo[];
   onResetApp: () => void;
   onDeletePhoto: (id: string) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function SettingsDialog({ photos, onResetApp, onDeletePhoto, open: externalOpen, onOpenChange: externalOnOpenChange }: SettingsDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use external state if provided, otherwise use internal state
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setIsOpen = externalOnOpenChange !== undefined ? externalOnOpenChange : setInternalOpen;
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showManagePhotos, setShowManagePhotos] = useState(false);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);

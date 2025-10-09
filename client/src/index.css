@@ -91,35 +91,43 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 0 0% 8%;
-  --foreground: 0 0% 98%;
+  /* Pure black theme - Photo Wallet design system */
+  --background: 0 0% 0%;           /* Pure black #000000 */
+  --foreground: 0 0% 100%;         /* Pure white #FFFFFF */
   --border: 0 0% 20%;
-  --card: 0 0% 12%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 0 0% 16%;
-  --sidebar: 0 0% 10%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 0 0% 14%;
+  --card: 0 0% 10%;                /* #1A1A1A for modals/cards */
+  --card-foreground: 0 0% 100%;
+  --card-border: 0 0% 13%;
+  --sidebar: 0 0% 4%;              /* #0A0A0A slightly elevated */
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 0 0% 13%;
   --sidebar-primary: 210 100% 60%;
   --sidebar-primary-foreground: 210 100% 98%;
   --sidebar-accent: 210 6% 16%;
   --sidebar-accent-foreground: 210 6% 92%;
   --sidebar-ring: 210 100% 60%;
-  --popover: 0 0% 16%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 0 0% 22%;
-  --primary: 210 100% 60%;
-  --primary-foreground: 210 100% 98%;
-  --secondary: 210 4% 20%;
-  --secondary-foreground: 210 4% 92%;
-  --muted: 210 6% 18%;
-  --muted-foreground: 210 6% 65%;
-  --accent: 210 8% 22%;
-  --accent-foreground: 210 8% 92%;
-  --destructive: 0 85% 60%;
-  --destructive-foreground: 0 85% 98%;
+  --popover: 0 0% 10%;             /* #1A1A1A */
+  --popover-foreground: 0 0% 100%;
+  --popover-border: 0 0% 20%;
+  --primary: 0 0% 100%;            /* White for primary actions */
+  --primary-foreground: 0 0% 0%;   /* Black text on white */
+  --secondary: 0 0% 40%;           /* #666666 tertiary text */
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 63%;    /* #A0A0A0 secondary text */
+  --accent: 28 68% 63%;            /* #E6A157 warm amber accent */
+  --accent-foreground: 0 0% 0%;
+  --destructive: 7 60% 49%;        /* #C44536 faded red */
+  --destructive-foreground: 0 0% 100%;
   --input: 0 0% 32%;
-  --ring: 210 100% 60%;
+  --ring: 0 0% 100%;               /* White focus ring */
+  
+  /* Retro film accent colors */
+  --accent-warm: 28 68% 63%;       /* #E6A157 amber */
+  --accent-red: 7 60% 49%;         /* #C44536 faded red */
+  --accent-teal: 180 35% 45%;      /* #4A9B9B vintage teal */
+  --accent-cream: 36 58% 90%;      /* #F4E8D8 photo paper */
+  
   --chart-1: 210 100% 70%;
   --chart-2: 200 90% 65%;
   --chart-3: 190 85% 60%;
