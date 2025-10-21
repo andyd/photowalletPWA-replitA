@@ -1,0 +1,87 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: photowalletPWA-replitA/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd photowalletPWA-replitA
+          npm ci
+      
+      - name: Run TypeScript check
+        run: |
+          cd photowalletPWA-replitA
+          npm run check
+      
+      - name: Run tests
+        run: |
+          cd photowalletPWA-replitA
+          npm run test:run
+      
+      - name: Generate coverage report
+        run: |
+          cd photowalletPWA-replitA
+          npm run test:coverage
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./photowalletPWA-replitA/coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+      
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.node-version }}
+          path: photowalletPWA-replitA/coverage/
+          retention-days: 30
+  
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: photowalletPWA-replitA/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd photowalletPWA-replitA
+          npm ci
+      
+      - name: TypeScript check
+        run: |
+          cd photowalletPWA-replitA
+          npm run check
+

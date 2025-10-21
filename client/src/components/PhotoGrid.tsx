@@ -1,18 +1,22 @@
 import type { Photo } from '@shared/schema';
 import { PhotoCard } from './PhotoCard';
-import { AddPhotoCard } from './AddPhotoCard';
+import { useResponsiveGrid } from '@/hooks/useResponsiveGrid';
 
 interface PhotoGridProps {
   photos: Photo[];
   onPhotoClick: (index: number) => void;
   onDelete: (id: string) => void;
-  onAddPhotos: (files: FileList) => void;
 }
 
-export function PhotoGrid({ photos, onPhotoClick, onDelete, onAddPhotos }: PhotoGridProps) {
+export function PhotoGrid({ photos, onPhotoClick, onDelete }: PhotoGridProps) {
+  const { columns } = useResponsiveGrid();
+  
   return (
     <div
-      className="grid grid-cols-3 gap-2 p-4 pb-8"
+      className="grid gap-2 p-4 pb-8"
+      style={{
+        gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+      }}
       data-testid="container-photo-grid"
     >
       {photos.map((photo, index) => (
@@ -24,10 +28,6 @@ export function PhotoGrid({ photos, onPhotoClick, onDelete, onAddPhotos }: Photo
           onDelete={onDelete}
         />
       ))}
-      <AddPhotoCard
-        onPhotoSelect={onAddPhotos}
-        photoCount={photos.length}
-      />
     </div>
   );
 }

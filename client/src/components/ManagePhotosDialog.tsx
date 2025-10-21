@@ -25,7 +25,7 @@ export function ManagePhotosDialog({ photos, open, onOpenChange, onDelete }: Man
         <DialogHeader>
           <DialogTitle>Manage Photos</DialogTitle>
           <DialogDescription>
-            Select photos to remove from your wallet
+            Remove photos from your wallet. Removed photos are saved in the Overflow Folder.
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[500px] pr-4">

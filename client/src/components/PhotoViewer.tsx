@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Share2 } from 'lucide-react';
+import { X, Share2, Trash2 } from 'lucide-react';
 import { useGesture } from '@use-gesture/react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -12,18 +12,7 @@ import {
   type CarouselApi,
 } from '@/components/ui/carousel';
 import { useWebShare } from '@/hooks/useWebShare';
-import { useToast } from '@/hooks/use-toast';
 import { GestureTutorial } from '@/components/GestureTutorial';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import type { Photo } from '@shared/schema';
 
 interface PhotoViewerProps {
@@ -47,7 +36,6 @@ export function PhotoViewer({
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [showUI, setShowUI] = useState(true);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
@@ -61,7 +49,6 @@ export function PhotoViewer({
   const currentPhoto = photos[currentIndex];
 
   const { canShare, sharePhoto } = useWebShare();
-  const { toast } = useToast();
 
   // Sync carousel with currentIndex
   useEffect(() => {
@@ -97,6 +84,8 @@ export function PhotoViewer({
     setPosition({ x: 0, y: 0 });
     dragOffsetX.set(0);
     dragOffsetY.set(0);
+    // Hide UI when transitioning between photos
+    setShowUI(false);
   }, [currentIndex]);
 
   // Reset zoom/pan state when viewer closes
@@ -120,37 +109,39 @@ export function PhotoViewer({
       setShowTutorial(true);
     }
 
-    const resetUITimeout = () => {
-      if (hideUITimeoutRef.current) {
-        clearTimeout(hideUITimeoutRef.current);
-      }
-      setShowUI(true);
-      hideUITimeoutRef.current = setTimeout(() => {
-        setShowUI(false);
-      }, 3000);
-    };
-
-    resetUITimeout();
+    // Don't auto-show UI, let user tap to show
+    setShowUI(false);
+    
     return () => {
       if (hideUITimeoutRef.current) {
         clearTimeout(hideUITimeoutRef.current);
       }
     };
-  }, [isOpen, currentIndex]);
+  }, [isOpen]);
 
   const handleTutorialClose = () => {
     localStorage.setItem('photo-wallet-tutorial-seen', 'true');
     setShowTutorial(false);
   };
 
-  const handleMouseMove = () => {
-    if (hideUITimeoutRef.current) {
-      clearTimeout(hideUITimeoutRef.current);
-    }
-    setShowUI(true);
-    hideUITimeoutRef.current = setTimeout(() => {
+  const handleTap = () => {
+    // Toggle UI visibility on tap
+    if (showUI) {
+      // If already showing, hide it
       setShowUI(false);
-    }, 3000);
+      if (hideUITimeoutRef.current) {
+        clearTimeout(hideUITimeoutRef.current);
+      }
+    } else {
+      // If hidden, show it and auto-hide after 3 seconds
+      setShowUI(true);
+      if (hideUITimeoutRef.current) {
+        clearTimeout(hideUITimeoutRef.current);
+      }
+      hideUITimeoutRef.current = setTimeout(() => {
+        setShowUI(false);
+      }, 3000);
+    }
   };
 
   const handleClose = () => {
@@ -166,10 +157,9 @@ export function PhotoViewer({
     });
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDelete = () => {
     if (currentPhoto) {
       onDeletePhoto(currentPhoto.id);
-      setShowDeleteDialog(false);
 
       // Navigate to next photo or close if this was the last one
       if (photos.length > 1) {
@@ -185,23 +175,17 @@ export function PhotoViewer({
   const handleShare = async () => {
     if (!currentPhoto) return;
 
-    const success = await sharePhoto(currentPhoto, {
+    await sharePhoto(currentPhoto, {
       title: 'Photo from Photo Wallet',
       text: currentPhoto.filename,
     });
-
-    if (success) {
-      toast({
-        title: 'Photo shared',
-        description: 'Successfully shared photo',
-      });
-    }
+    // Share silently, no toast needed
   };
 
   // Use gesture hook for comprehensive touch handling
   const bind = useGesture(
     {
-      onDrag: ({ offset: [x, y], movement: [mx, my], down, cancel }) => {
+      onDrag: ({ offset: [x, y], movement: [mx, my], down, cancel }: any) => {
         // If zoomed in, allow panning
         if (scale > 1) {
           setPosition({ x, y });
@@ -233,14 +217,14 @@ export function PhotoViewer({
           }
         }
       },
-      onPinch: ({ offset: [d] }) => {
+      onPinch: ({ offset: [d] }: any) => {
         const newScale = Math.min(Math.max(1, 1 + d / 200), 3);
         setScale(newScale);
         if (newScale === 1) {
           setPosition({ x: 0, y: 0 });
         }
       },
-      onDoubleClick: ({ event }) => {
+      onDoubleClick: ({ event }: any) => {
         event.preventDefault();
         // Double tap to toggle zoom
         if (scale > 1) {
@@ -249,11 +233,6 @@ export function PhotoViewer({
         } else {
           setScale(2);
         }
-      },
-      onLongPress: ({ event }) => {
-        event.preventDefault();
-        // Long press to show delete dialog
-        setShowDeleteDialog(true);
       },
     },
     {
@@ -264,10 +243,6 @@ export function PhotoViewer({
       pinch: {
         scaleBounds: { min: 1, max: 3 },
         rubberband: true,
-      },
-      longPress: {
-        threshold: 500,
-        filterTaps: true,
       },
     }
   );
@@ -296,7 +271,7 @@ export function PhotoViewer({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
-        onMouseMove={handleMouseMove}
+        onClick={handleTap}
         data-testid="container-photo-viewer"
       >
         <motion.div
@@ -323,18 +298,30 @@ export function PhotoViewer({
           >
             {currentIndex + 1} of {photos.length}
           </div>
-          {canShare && (
+          <div className="flex gap-2">
             <Button
               size="icon"
               variant="ghost"
-              onClick={handleShare}
+              onClick={handleDelete}
               className="text-white hover:bg-white/20"
-              data-testid="button-share-photo"
-              aria-label="Share this photo"
+              data-testid="button-delete-photo"
+              aria-label="Delete this photo"
             >
-              <Share2 className="w-6 h-6" aria-hidden="true" />
+              <Trash2 className="w-6 h-6" aria-hidden="true" />
             </Button>
-          )}
+            {canShare && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleShare}
+                className="text-white hover:bg-white/20"
+                data-testid="button-share-photo"
+                aria-label="Share this photo"
+              >
+                <Share2 className="w-6 h-6" aria-hidden="true" />
+              </Button>
+            )}
+          </div>
         </motion.div>
 
         <Carousel
@@ -347,13 +334,14 @@ export function PhotoViewer({
         >
           <CarouselContent className="h-full">
             {photos.map((photo) => (
-              <CarouselItem key={photo.id} className="h-full">
+              <CarouselItem key={photo.id} className="h-full flex items-center justify-center">
                 <div
                   ref={imageContainerRef}
                   {...bind()}
                   className="relative w-full h-full flex items-center justify-center touch-none"
                   role="img"
                   aria-label={`Photo: ${photo.filename}`}
+                  onClick={(e) => e.stopPropagation()}
                   style={{
                     cursor: scale > 1 ? 'grab' : 'default',
                   }}
@@ -411,29 +399,6 @@ export function PhotoViewer({
             {scale.toFixed(1)}x
           </motion.div>
         )}
-
-        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <AlertDialogContent data-testid="dialog-delete-photo">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Photo?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this photo? This action cannot be undone.
-                <br />
-                <span className="text-sm font-medium mt-2 block">{currentPhoto.filename}</span>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                data-testid="button-confirm-delete"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
 
         {/* Gesture Tutorial for first-time users */}
         {showTutorial && <GestureTutorial onClose={handleTutorialClose} />}

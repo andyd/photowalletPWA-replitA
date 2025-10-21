@@ -1,6 +1,5 @@
 import { Upload, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 
 interface EmptyStateProps {
   onUploadClick: () => void;
@@ -8,29 +7,34 @@ interface EmptyStateProps {
 
 export function EmptyState({ onUploadClick }: EmptyStateProps) {
   return (
-    <div className="flex items-center justify-center min-h-[60vh] px-4">
-      <Card className="p-12 text-center max-w-md w-full">
-        <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-            <Wallet className="w-10 h-10 text-muted-foreground" />
-          </div>
-        </div>
-        <h2 className="text-2xl font-semibold mb-3" data-testid="text-empty-title">
-          No Photos Yet
-        </h2>
-        <p className="text-muted-foreground mb-8" data-testid="text-empty-description">
-          Add your first cherished photo to start building your digital wallet collection.
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 pb-4">
+      <div className="flex flex-col items-center max-w-2xl w-full">
+        {/* App Name - Centered and Large */}
+        <h1 className="text-5xl md:text-6xl font-bold mb-6 text-center tracking-tight">
+          Photo Wallet
+        </h1>
+
+        {/* App Description */}
+        <p className="text-xl md:text-2xl text-muted-foreground mb-16 text-center">
+          The photos you want with you all the time
         </p>
+
+        {/* Large App Icon */}
+        <div className="mb-24">
+          <Wallet className="w-32 h-32 text-muted-foreground" />
+        </div>
+
+        {/* Large Add Photos Button */}
         <Button 
           size="lg" 
           onClick={onUploadClick}
           data-testid="button-add-first-photo"
-          className="w-full"
+          className="text-lg px-12 py-8 h-auto rounded-2xl shadow-lg hover:shadow-xl transition-all mb-4"
         >
-          <Upload className="w-4 h-4 mr-2" />
-          Add Your First Photo
+          <Upload className="w-6 h-6 mr-3" />
+          Add Photos
         </Button>
-      </Card>
+      </div>
     </div>
   );
 }

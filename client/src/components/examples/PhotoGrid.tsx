@@ -6,6 +6,7 @@ export default function PhotoGridExample() {
   const mockPhotos: Photo[] = Array.from({ length: 6 }, (_, i) => ({
     id: `photo-${i}`,
     blob: new Blob(['mock'], { type: 'image/jpeg' }),
+    thumbnail: new Blob(['mock'], { type: 'image/jpeg' }),
     filename: `photo-${i}.jpg`,
     order: i,
     createdAt: new Date(),

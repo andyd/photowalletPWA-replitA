@@ -14,8 +14,13 @@ class PhotoDatabase extends Dexie {
     this.version(2).stores({
       photos: 'id, order, createdAt',
     }).upgrade(async (trans) => {
-      // Migration: existing photos won't have thumbnails, they'll be generated on next load
       console.log('Database upgraded to version 2 with thumbnail support');
+    });
+    // Version 3: Added archive support
+    this.version(3).stores({
+      photos: 'id, order, createdAt, archived, archivedAt',
+    }).upgrade(async (trans) => {
+      console.log('Database upgraded to version 3 with archive support');
     });
   }
 }
@@ -24,7 +29,20 @@ export const db = new PhotoDatabase();
 
 export const photoStorage = {
   async getAllPhotos(): Promise<Photo[]> {
-    return await db.photos.orderBy('order').toArray();
+    return await db.photos
+      .filter(photo => !photo.archived)
+      .sortBy('order');
+  },
+
+  async getArchivedPhotos(): Promise<Photo[]> {
+    const archived = await db.photos
+      .filter(photo => photo.archived === true)
+      .toArray();
+    return archived.sort((a, b) => {
+      const dateA = a.archivedAt?.getTime() || 0;
+      const dateB = b.archivedAt?.getTime() || 0;
+      return dateB - dateA; // newest first
+    });
   },
 
   async getPhoto(id: string): Promise<Photo | undefined> {
@@ -43,6 +61,40 @@ export const photoStorage = {
     await db.photos.delete(id);
   },
 
+  async archivePhoto(id: string): Promise<void> {
+    await db.photos.update(id, {
+      archived: true,
+      archivedAt: new Date(),
+    });
+  },
+
+  async unarchivePhoto(id: string): Promise<void> {
+    // Get current max order for active photos
+    const activePhotos = await this.getAllPhotos();
+    const maxOrder = activePhotos.length > 0 
+      ? Math.max(...activePhotos.map(p => p.order))
+      : -1;
+    
+    await db.photos.update(id, {
+      archived: false,
+      archivedAt: undefined,
+      order: maxOrder + 1,
+    });
+  },
+
+  async archiveOldestPhotos(count: number): Promise<Photo[]> {
+    const activePhotos = await this.getAllPhotos();
+    const photosToArchive = activePhotos
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .slice(0, count);
+    
+    for (const photo of photosToArchive) {
+      await this.archivePhoto(photo.id);
+    }
+    
+    return photosToArchive;
+  },
+
   async reorderPhotos(photos: Photo[]): Promise<void> {
     await db.transaction('rw', db.photos, async () => {
       for (const photo of photos) {
@@ -52,7 +104,7 @@ export const photoStorage = {
   },
 
   async getPhotoCount(): Promise<number> {
-    return await db.photos.count();
+    return await db.photos.filter(photo => !photo.archived).count();
   },
 
   async clearAll(): Promise<void> {

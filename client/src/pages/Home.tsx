@@ -1,27 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { usePhotoStore } from '@/hooks/usePhotoStore';
+import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { PhotoCounter } from '@/components/PhotoCounter';
 import { EmptyState } from '@/components/EmptyState';
 import { PhotoGrid } from '@/components/PhotoGrid';
 import { PhotoViewer } from '@/components/PhotoViewer';
 import { SettingsDialog } from '@/components/SettingsDialog';
+import { ManagePhotosDialog } from '@/components/ManagePhotosDialog';
 import { InstallBanner } from '@/components/InstallBanner';
 import { WelcomeScreen } from '@/components/WelcomeScreen';
 import { photoStorage } from '@/services/photoStorage';
-import { useToast } from '@/hooks/use-toast';
 import { isDuplicatePhoto } from '@/utils/photoUtils';
 import { MAX_PHOTOS } from '@/utils/constants';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 export default function Home() {
   const {
@@ -38,10 +30,8 @@ export default function Home() {
   } = usePhotoStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-  const [duplicateFile, setDuplicateFile] = useState<File | null>(null);
-  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showManagePhotos, setShowManagePhotos] = useState(false);
   const pendingFilesRef = useRef<File[]>([]);
 
   useEffect(() => {
@@ -73,23 +63,16 @@ export default function Home() {
     const fileArray = Array.from(files);
     const remainingSlots = MAX_PHOTOS - photos.length;
 
-    // Don't allow adding any photos if at limit
+    // If at limit, show warning and open manage photos
     if (remainingSlots <= 0) {
-      toast({
-        title: 'Photo limit reached',
-        description: `Maximum of ${MAX_PHOTOS} photos allowed. Delete some photos to add more.`,
-        variant: 'destructive',
-      });
+      alert(`Your wallet is full (${MAX_PHOTOS} photos). Please remove some photos before adding more.`);
+      setShowManagePhotos(true);
       return;
     }
 
+    // Only process files up to the limit
     if (fileArray.length > remainingSlots) {
-      toast({
-        title: 'Too many photos',
-        description: `You can only add ${remainingSlots} more photo${remainingSlots === 1 ? '' : 's'}. Limit is ${MAX_PHOTOS} photos.`,
-        variant: 'destructive',
-      });
-      // Only process files up to the limit
+      alert(`You can only add ${remainingSlots} more photo${remainingSlots === 1 ? '' : 's'}. Your wallet limit is ${MAX_PHOTOS} photos.`);
       pendingFilesRef.current = fileArray.slice(0, remainingSlots);
     } else {
       pendingFilesRef.current = fileArray;
@@ -109,66 +92,41 @@ export default function Home() {
     const file = pendingFilesRef.current[0];
     const isDuplicate = await isDuplicatePhoto(file, photos);
 
-    if (isDuplicate) {
-      setDuplicateFile(file);
-      setShowDuplicateDialog(true);
-    } else {
+    // Skip duplicates silently, no dialog needed
+    if (!isDuplicate) {
       await addPhotoToStore(file);
-      pendingFilesRef.current = pendingFilesRef.current.slice(1);
-      await processNextFile();
     }
-  };
-
-  const handleAddDuplicate = async () => {
-    if (duplicateFile) {
-      await addPhotoToStore(duplicateFile);
-      setDuplicateFile(null);
-      setShowDuplicateDialog(false);
-      pendingFilesRef.current = pendingFilesRef.current.slice(1);
-      await processNextFile();
-    }
-  };
-
-  const handleSkipDuplicate = async () => {
-    setDuplicateFile(null);
-    setShowDuplicateDialog(false);
+    
     pendingFilesRef.current = pendingFilesRef.current.slice(1);
     await processNextFile();
   };
 
+
   const addPhotoToStore = async (file: File) => {
     // Double-check limit before adding (in case photos array changed)
     if (photos.length >= MAX_PHOTOS) {
-      toast({
-        title: 'Photo limit reached',
-        description: `Maximum of ${MAX_PHOTOS} photos allowed.`,
-        variant: 'destructive',
-      });
       return;
     }
 
     try {
       await addPhoto(file);
-      toast({
-        title: 'Photo added',
-        description: file.name,
-      });
+      // Photo added silently, no toast needed
     } catch (error) {
-      toast({
-        title: 'Failed to add photo',
-        description: file.name,
-        variant: 'destructive',
-      });
+      // Failed silently, user will see photo didn't appear
+      console.error('Failed to add photo:', error);
     }
   };
 
   const handleResetApp = async () => {
     await photoStorage.clearAll();
     await loadPhotos();
-    toast({
-      title: 'App reset',
-      description: 'All photos have been deleted.',
-    });
+    // App reset silently, no toast needed
+  };
+
+  const handleRemovePhoto = async (id: string) => {
+    // Move to overflow folder instead of deleting
+    await photoStorage.archivePhoto(id);
+    await loadPhotos();
   };
 
   if (isLoading && photos.length === 0) {
@@ -194,10 +152,7 @@ export default function Home() {
         </a>
 
       {photos.length === 0 ? (
-        <>
-          <Header />
-          <EmptyState onUploadClick={handleUploadClick} />
-        </>
+        <EmptyState onUploadClick={handleUploadClick} />
       ) : (
         <>
           <div className="px-4 pt-4 pb-2 flex items-center justify-between">
@@ -205,7 +160,20 @@ export default function Home() {
               Photo Wallet
             </h1>
             <div className="flex items-center gap-2">
-              <PhotoCounter count={photos.length} />
+              <PhotoCounter 
+                count={photos.length} 
+                onClick={() => setShowManagePhotos(true)}
+              />
+              <Button
+                size="sm"
+                onClick={handleUploadClick}
+                disabled={photos.length >= MAX_PHOTOS}
+                data-testid="button-add-photos-header"
+                className="gap-1"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Add Photos</span>
+              </Button>
               <SettingsDialog
                 photos={photos}
                 onResetApp={handleResetApp}
@@ -218,7 +186,6 @@ export default function Home() {
               photos={photos}
               onPhotoClick={openViewer}
               onDelete={deletePhoto}
-              onAddPhotos={handleAddPhotos}
             />
           </main>
         </>
@@ -244,26 +211,12 @@ export default function Home() {
         />
       )}
 
-      <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
-        <AlertDialogContent data-testid="dialog-duplicate-photo">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Duplicate Photo Detected</AlertDialogTitle>
-            <AlertDialogDescription>
-              This photo already exists in your wallet. Do you want to add it anyway?
-              <br />
-              <span className="text-sm font-medium mt-2 block">{duplicateFile?.name}</span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleSkipDuplicate} data-testid="button-skip-duplicate">
-              Skip
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleAddDuplicate} data-testid="button-add-duplicate">
-              Add Anyway
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ManagePhotosDialog
+        photos={photos}
+        open={showManagePhotos}
+        onOpenChange={setShowManagePhotos}
+        onDelete={handleRemovePhoto}
+      />
 
         <InstallBanner photoCount={photos.length} />
       </div>

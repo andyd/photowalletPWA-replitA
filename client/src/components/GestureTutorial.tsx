@@ -1,13 +1,19 @@
-import { useState } from 'react';
-import { X, Hand, ZoomIn, Trash2, ArrowLeft, ArrowRight, ArrowDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Hand, ZoomIn, Trash2, ArrowLeft, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from '@/components/ui/carousel';
 
 interface GestureTutorialProps {
   onClose: () => void;
 }
 
 export function GestureTutorial({ onClose }: GestureTutorialProps) {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentTip, setCurrentTip] = useState(0);
 
   const tips = [
@@ -43,15 +49,27 @@ export function GestureTutorial({ onClose }: GestureTutorialProps) {
     },
   ];
 
-  const currentTipData = tips[currentTip];
-  const Icon = currentTipData.icon;
   const isLastTip = currentTip === tips.length - 1;
+
+  // Listen to carousel changes
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const onSelect = () => {
+      setCurrentTip(carouselApi.selectedScrollSnap());
+    };
+
+    carouselApi.on('select', onSelect);
+    return () => {
+      carouselApi.off('select', onSelect);
+    };
+  }, [carouselApi]);
 
   const handleNext = () => {
     if (isLastTip) {
       onClose();
-    } else {
-      setCurrentTip((prev) => prev + 1);
+    } else if (carouselApi) {
+      carouselApi.scrollNext();
     }
   };
 
@@ -61,74 +79,82 @@ export function GestureTutorial({ onClose }: GestureTutorialProps) {
 
   return (
     <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentTip}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            className="bg-card rounded-2xl p-8 shadow-2xl"
+      <div className="w-full max-w-sm relative">
+        <div className="bg-card rounded-2xl p-8 shadow-2xl">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors z-10"
+            aria-label="Close tutorial"
           >
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Close tutorial"
+            <X className="w-5 h-5" />
+          </button>
+
+          <Carousel
+            setApi={setCarouselApi}
+            opts={{
+              loop: false,
+              duration: 20,
+            }}
+          >
+            <CarouselContent>
+              {tips.map((tip, index) => {
+                const Icon = tip.icon;
+                return (
+                  <CarouselItem key={index}>
+                    <div className="flex flex-col items-center text-center space-y-6">
+                      {/* Icon */}
+                      <div className={`w-16 h-16 rounded-full bg-background flex items-center justify-center ${tip.color}`}>
+                        <Icon className="w-8 h-8" />
+                      </div>
+
+                      {/* Content */}
+                      <div className="space-y-2">
+                        <h3 className="text-xl font-semibold">
+                          {tip.gesture}
+                        </h3>
+                        <p className="text-muted-foreground leading-relaxed">
+                          {tip.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+          </Carousel>
+
+          {/* Progress */}
+          <div className="flex gap-2 pt-8 justify-center">
+            {tips.map((_, index) => (
+              <div
+                key={index}
+                className={`h-1 rounded-full transition-all ${
+                  index === currentTip
+                    ? 'bg-primary w-8'
+                    : 'bg-muted w-4'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 w-full pt-6">
+            <Button
+              variant="ghost"
+              onClick={handleSkip}
+              className="flex-1"
             >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Icon */}
-            <div className="flex flex-col items-center text-center space-y-6">
-              <div className={`w-16 h-16 rounded-full bg-background flex items-center justify-center ${currentTipData.color}`}>
-                <Icon className="w-8 h-8" />
-              </div>
-
-              {/* Content */}
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold">
-                  {currentTipData.gesture}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {currentTipData.description}
-                </p>
-              </div>
-
-              {/* Progress */}
-              <div className="flex gap-2 pt-2">
-                {tips.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-1 rounded-full transition-all ${
-                      index === currentTip
-                        ? 'bg-primary w-8'
-                        : 'bg-muted w-4'
-                    }`}
-                  />
-                ))}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3 w-full pt-4">
-                <Button
-                  variant="ghost"
-                  onClick={handleSkip}
-                  className="flex-1"
-                >
-                  Skip
-                </Button>
-                <Button
-                  onClick={handleNext}
-                  className="flex-1"
-                >
-                  {isLastTip ? 'Got it!' : 'Next'}
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+              Skip
+            </Button>
+            <Button
+              onClick={handleNext}
+              className="flex-1"
+            >
+              {isLastTip ? 'Got it!' : 'Next'}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

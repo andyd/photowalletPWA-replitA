@@ -6,6 +6,7 @@ export default function PhotoCardExample() {
   const mockPhoto: Photo = {
     id: '1',
     blob: new Blob(['mock'], { type: 'image/jpeg' }),
+    thumbnail: new Blob(['mock'], { type: 'image/jpeg' }),
     filename: 'example.jpg',
     order: 0,
     createdAt: new Date(),

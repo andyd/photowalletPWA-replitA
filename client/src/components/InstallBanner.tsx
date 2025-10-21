@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePWA } from '@/hooks/usePWA';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,21 +47,18 @@ export function InstallBanner({ photoCount }: InstallBannerProps) {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-safe" data-testid="banner-install">
-      <div className="mx-auto max-w-lg bg-card border rounded-lg shadow-lg p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-0.5">
-            <Download className="w-5 h-5 text-primary" />
-          </div>
+      <Alert className="mx-auto max-w-lg shadow-lg">
+        <Download className="h-5 w-5" />
+        <div className="flex items-start justify-between flex-1">
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold mb-1">Install Photo Wallet</h3>
-            <p className="text-sm text-muted-foreground mb-3">
+            <AlertTitle>Install Photo Wallet</AlertTitle>
+            <AlertDescription className="mb-3">
               Add to your home screen for quick access to your photos anytime, anywhere.
-            </p>
+            </AlertDescription>
             <div className="flex gap-2">
               <Button
                 onClick={handleInstall}
                 size="sm"
-                className="flex-1"
                 data-testid="button-install-banner"
               >
                 Install Now
@@ -79,13 +77,14 @@ export function InstallBanner({ photoCount }: InstallBannerProps) {
             onClick={handleDismiss}
             size="icon"
             variant="ghost"
-            className="flex-shrink-0 -mr-2 -mt-1"
+            className="flex-shrink-0 -mr-2 -mt-1 ml-2"
             data-testid="button-close-banner"
+            aria-label="Dismiss install banner"
           >
             <X className="w-4 h-4" />
           </Button>
         </div>
-      </div>
+      </Alert>
     </div>
   );
 }

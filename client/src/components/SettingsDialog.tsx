@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Settings, Trash2, Images, Moon, Sun, Monitor, Download, Github } from 'lucide-react';
+import { Settings, Trash2, Images, Moon, Sun, Monitor, Download, Github, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Link } from 'wouter';
 import {
   Dialog,
@@ -21,6 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ManagePhotosDialog } from './ManagePhotosDialog';
+import { ArchiveDialog } from './ArchiveDialog';
 import { useTheme } from '@/components/ThemeProvider';
 import { usePWA } from '@/hooks/usePWA';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +38,7 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
   const [isOpen, setIsOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showManagePhotos, setShowManagePhotos] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const { theme, setTheme } = useTheme();
   const { isInstallable, isInstalled, installApp } = usePWA();
   const { toast } = useToast();
@@ -48,6 +51,11 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
 
   const handleManagePhotos = () => {
     setShowManagePhotos(true);
+    setIsOpen(false);
+  };
+
+  const handleViewArchive = () => {
+    setShowArchiveDialog(true);
     setIsOpen(false);
   };
 
@@ -80,35 +88,42 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
           <div className="py-4 space-y-4">
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Theme</h3>
-              <div className="flex gap-2">
-                <Button
-                  variant={theme === 'dark' ? 'default' : 'outline'}
+              <ToggleGroup
+                type="single"
+                value={theme}
+                onValueChange={(value) => {
+                  if (value) setTheme(value as 'light' | 'dark' | 'system');
+                }}
+                className="grid grid-cols-3 gap-2"
+              >
+                <ToggleGroupItem
+                  value="dark"
+                  aria-label="Dark theme"
                   className="flex-1 justify-start"
-                  onClick={() => setTheme('dark')}
                   data-testid="button-theme-dark"
                 >
                   <Moon className="w-4 h-4 mr-2" />
                   Dark
-                </Button>
-                <Button
-                  variant={theme === 'light' ? 'default' : 'outline'}
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="light"
+                  aria-label="Light theme"
                   className="flex-1 justify-start"
-                  onClick={() => setTheme('light')}
                   data-testid="button-theme-light"
                 >
                   <Sun className="w-4 h-4 mr-2" />
                   Light
-                </Button>
-                <Button
-                  variant={theme === 'system' ? 'default' : 'outline'}
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="system"
+                  aria-label="System theme"
                   className="flex-1 justify-start"
-                  onClick={() => setTheme('system')}
                   data-testid="button-theme-system"
                 >
                   <Monitor className="w-4 h-4 mr-2" />
                   System
-                </Button>
-              </div>
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
 
             {(isInstallable || isInstalled) && (
@@ -143,6 +158,15 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
               >
                 <Images className="w-4 h-4 mr-2" />
                 Manage Photos
+              </Button>
+              <Button
+                variant="secondary"
+                className="w-full justify-start"
+                onClick={handleViewArchive}
+                data-testid="button-view-archive"
+              >
+                <Archive className="w-4 h-4 mr-2" />
+                Overflow Folder
               </Button>
             </div>
 
@@ -182,6 +206,11 @@ export function SettingsDialog({ photos, onResetApp, onDeletePhoto }: SettingsDi
         open={showManagePhotos}
         onOpenChange={setShowManagePhotos}
         onDelete={onDeletePhoto}
+      />
+
+      <ArchiveDialog
+        open={showArchiveDialog}
+        onOpenChange={setShowArchiveDialog}
       />
 
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>

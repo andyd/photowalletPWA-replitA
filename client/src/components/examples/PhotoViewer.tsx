@@ -11,6 +11,7 @@ export default function PhotoViewerExample() {
   const mockPhotos: Photo[] = Array.from({ length: 3 }, (_, i) => ({
     id: `photo-${i}`,
     blob: new Blob(['mock'], { type: 'image/jpeg' }),
+    thumbnail: new Blob(['mock'], { type: 'image/jpeg' }),
     filename: `photo-${i}.jpg`,
     order: i,
     createdAt: new Date(),
@@ -29,6 +30,7 @@ export default function PhotoViewerExample() {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         onIndexChange={setCurrentIndex}
+        onDeletePhoto={(id) => console.log('Delete photo:', id)}
       />
     </>
   );
